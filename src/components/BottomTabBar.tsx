@@ -11,12 +11,15 @@ const ROLE_TABS: Record<Role, TabItem[]> = {
     { key: 'detail', path: '/field/task/PK-KHI-7821', icon: 'near_me' },
     { key: 'buddy', path: '/field/buddy', icon: 'volunteer_activism' },
     { key: 'sync', path: '/field/sync', icon: 'sync', badge: 3 },
+    { key: 'communityShort', path: '/community-shelters', icon: 'volunteer_activism' },
   ],
   registrar: [
     { key: 'register', path: '/register', icon: 'app_registration' },
+    { key: 'communityShort', path: '/community-shelters', icon: 'volunteer_activism' },
   ],
   shelter: [
     { key: 'shelter', path: '/shelter', icon: 'night_shelter' },
+    { key: 'communityShort', path: '/community-shelters', icon: 'volunteer_activism' },
   ],
   viewer: [],
 }

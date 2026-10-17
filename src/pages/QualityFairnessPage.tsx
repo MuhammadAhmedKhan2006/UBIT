@@ -120,7 +120,7 @@ export default function QualityFairnessPage() {
       </div>
       </div>
       <div className={"flex flex-row md:flex-col items-end gap-space-xs shrink-0 self-stretch md:self-auto justify-end"}>
-      <button className={"w-full md:w-auto px-space-md py-space-sm rounded-lg bg-primary text-on-primary font-headline-sm text-body-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-2px_0_rgba(0,0,0,0.2),0_0_20px_rgba(242,169,59,0.35)] hover:bg-primary-fixed hover:shadow-[0_0_24px_rgba(242,169,59,0.5)] active:translate-y-0.5 transition-all flex items-center justify-center gap-space-xs"} id={"open-correction-modal"}>
+      <button className={"w-full md:w-auto px-space-md py-space-sm rounded-lg bg-primary text-on-primary font-headline-sm text-body-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-2px_0_rgba(0,0,0,0.2),0_0_20px_rgba(242,169,59,0.35)] hover:bg-primary-fixed hover:shadow-[0_0_24px_rgba(242,169,59,0.5)] active:translate-y-0.5 transition-all flex items-center justify-center gap-space-xs"} id={"open-correction-modal"} data-action="openFairnessModal" data-args={"[]"}>
       <span className={"material-symbols-outlined text-body-lg"}>tune</span>
       <span>Apply Equity Correction</span>
       <span className={"font-urdu-body text-telemetry-sm"}>تصحیح نافذ کریں</span>
@@ -502,7 +502,7 @@ export default function QualityFairnessPage() {
       </div>
       </div>
       {/*  Confirmation Modal (Overlaid Frosted Glass Modal)  */}
-      <div className={"fixed inset-0 z-50 flex items-center justify-center p-space-md bg-surface-dim/80 backdrop-blur-md transition-opacity duration-300"} id={"fairness-modal"}>
+      <div className={"hidden fixed inset-0 z-50 flex items-center justify-center p-space-md bg-surface-dim/80 backdrop-blur-md transition-opacity duration-300"} id={"fairness-modal"}>
       <div className={"relative w-full max-w-2xl rounded-2xl bg-surface-container-low/95 p-space-xl shadow-[0_24px_48px_-12px_rgba(0,0,0,0.8),0_0_32px_rgba(242,169,59,0.2)] backdrop-blur-2xl flex flex-col gap-space-md"}>
       {/*  Top Amber Rim Highlight Accent  */}
       <div className={"absolute inset-x-0 top-0 h-1.5 rounded-t-2xl bg-gradient-to-r from-primary-container via-primary to-secondary"}></div>
@@ -521,7 +521,7 @@ export default function QualityFairnessPage() {
                   </span>
       </div>
       </div>
-      <button className={"w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"} id={"close-modal-x"}>
+      <button className={"w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"} id={"close-modal-x"} data-action="closeFairnessModal" data-args={"[]"}>
       <span className={"material-symbols-outlined text-body-lg"}>close</span>
       </button>
       </div>
@@ -559,11 +559,11 @@ export default function QualityFairnessPage() {
       </div>
       {/*  Action Buttons  */}
       <div className={"flex items-center justify-end gap-space-sm pt-space-xs"}>
-      <button className={"px-space-md py-space-sm rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-headline-sm text-body-sm transition-all flex items-center gap-1"} id={"modal-cancel-btn"}>
+      <button className={"px-space-md py-space-sm rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high font-headline-sm text-body-sm transition-all flex items-center gap-1"} id={"modal-cancel-btn"} data-action="closeFairnessModal" data-args={"[]"}>
       <span>Cancel</span>
       <span className={"text-on-surface-variant/70"}>/ منسوخ</span>
       </button>
-      <button className={"px-space-lg py-space-sm rounded-lg bg-primary text-on-primary font-headline-sm text-body-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-2px_0_rgba(0,0,0,0.2),0_0_20px_rgba(242,169,59,0.4)] hover:bg-primary-fixed hover:shadow-[0_0_28px_rgba(242,169,59,0.6)] active:translate-y-0.5 transition-all flex items-center gap-space-xs"} id={"modal-confirm-btn"}>
+      <button className={"px-space-lg py-space-sm rounded-lg bg-primary text-on-primary font-headline-sm text-body-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-2px_0_rgba(0,0,0,0.2),0_0_20px_rgba(242,169,59,0.4)] hover:bg-primary-fixed hover:shadow-[0_0_28px_rgba(242,169,59,0.6)] active:translate-y-0.5 transition-all flex items-center gap-space-xs"} id={"modal-confirm-btn"} data-action="confirmFairnessModal" data-args={"[]"}>
       <span className={"material-symbols-outlined text-body-md"}>verified</span>
       <span>Confirm &amp; Recalibrate Queue</span>
       <span className={"font-urdu-body text-telemetry-sm"}>تصدیق اور نافذ کریں</span>

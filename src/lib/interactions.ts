@@ -2,11 +2,12 @@ import { useEffect, type FormEvent, type MouseEvent, type ChangeEvent } from 're
 import type { NavigateFunction } from 'react-router-dom'
 import { useStore, type Role } from '../store'
 
-const ROLE_USERS: Record<string, { name: string; nameUrdu: string; email: string; role: Role; roleLabel: string; home: string }> = {
+const ROLE_USERS: Record<string, { name: string; nameUrdu: string; email: string; phone: string; role: Role; roleLabel: string; home: string }> = {
   coordinator: {
     name: 'Zara Khan',
     nameUrdu: 'زارا خان',
     email: 'zara.khan@emergency.sindh.gov.pk',
+    phone: '+92 300 1112233',
     role: 'coordinator',
     roleLabel: 'Coordinator / کوآرڈینیٹر',
     home: '/command',
@@ -15,14 +16,16 @@ const ROLE_USERS: Record<string, { name: string; nameUrdu: string; email: string
     name: 'Bilal Ahmed',
     nameUrdu: 'بلال احمد',
     email: 'bilal.field@volunteer.sindh.org',
+    phone: '+92 321 4455667',
     role: 'volunteer',
     roleLabel: 'Field Volunteer / فیلڈ رضاکار',
-    home: '/tasks',
+    home: '/field/tasks',
   },
   registrar: {
     name: 'Amina Baloch',
     nameUrdu: 'آمنہ بلوچ',
     email: 'amina.b@community.sindh.gov.pk',
+    phone: '+92 333 7788990',
     role: 'registrar',
     roleLabel: 'Registrar / رجسٹرار',
     home: '/register',
@@ -31,6 +34,7 @@ const ROLE_USERS: Record<string, { name: string; nameUrdu: string; email: string
     name: 'Tariq Mansoor',
     nameUrdu: 'طارق منصور',
     email: 'tariq.shelter@relief.sindh.gov.pk',
+    phone: '+92 345 2200114',
     role: 'shelter',
     roleLabel: 'Shelter Manager / شیلٹر مینیجر',
     home: '/shelter',
@@ -39,6 +43,7 @@ const ROLE_USERS: Record<string, { name: string; nameUrdu: string; email: string
     name: 'Dr. Farooq Malik',
     nameUrdu: 'ڈاکٹر فاروق ملک',
     email: 'f.malik@audit.un-relief.org',
+    phone: '+92 301 5566778',
     role: 'viewer',
     roleLabel: 'Viewer / غیر جانبدار مبصر',
     home: '/quality/audit',
@@ -84,6 +89,53 @@ function formatClock(total: number) {
 function toUrduDigits(s: string) {
   const map = '۰۱۲۳۴۵۶۷۸۹'
   return s.replace(/\d/g, (d) => map[Number(d)])
+}
+
+const el = (id: string) => document.getElementById(id)
+const setText = (id: string, text: string) => {
+  const n = el(id)
+  if (n) n.textContent = text
+}
+
+function residentReply(n: number, text: string) {
+  const bubble = el('simulated-reply-bubble')
+  bubble?.classList.remove('hidden')
+  bubble?.classList.add('flex')
+  setText('reply-bubble-content', text.replace(/&amp;/g, '&'))
+  setText('reply-time', new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
+  const outcome: Record<number, [string, string, string]> = {
+    1: ['Resident replied 1: marked SAFE, ladder closed.', 'رہائشی نے ۱ بھیجا: محفوظ، مرحلہ مکمل۔', 'success'],
+    2: ['Resident replied 2: needs HELP, volunteer assigned.', 'رہائشی نے ۲ بھیجا: مدد درکار، رضاکار مقرر۔', 'warning'],
+    3: ['Resident replied 3: EVACUATE, boat dispatched.', 'رہائشی نے ۳ بھیجا: انخلاء، کشتی روانہ۔', 'error'],
+  }
+  const o = outcome[n] || outcome[2]
+  setText('log-text', o[0])
+  setText('ladder-badge', n === 1 ? 'RESOLVED' : n === 3 ? 'STAGE 4 ACTIVE' : 'STAGE 3 ACTIVE')
+  showToast(o[0], o[1], o[2] as 'success' | 'warning' | 'error')
+}
+
+/** Tiny, safe interpreter for the few inline expressions the exported markup uses. */
+function runExpression(expr: string, target: HTMLElement): boolean {
+  let handled = false
+  for (const stmt of expr.split(';').map((s) => s.trim()).filter(Boolean)) {
+    const cls = stmt.match(/^document\.getElementById\('([^']+)'\)\.classList\.(add|remove|toggle)\('([^']+)'\)$/)
+    if (cls) {
+      const node = el(cls[1])
+      if (node) {
+        node.classList[cls[2] as 'add' | 'remove' | 'toggle'](cls[3])
+        if (cls[3] === 'hidden' && cls[2] === 'remove') node.classList.add('flex')
+        handled = true
+      }
+    } else if (/^triggerRecalculateNotification\(\)$/.test(stmt)) {
+      useStore.getState().recomputeAssignments()
+      showToast('Routes recalculated around closed road', 'بند سڑک کے گرد راستے دوبارہ ترتیب دیے گئے', 'info')
+      handled = true
+    } else if (stmt === 'this.parentElement.remove()') {
+      target.parentElement?.remove()
+      handled = true
+    }
+  }
+  return handled
 }
 
 export function usePageInteractions(_page: string, nav: NavigateFunction) {
@@ -204,7 +256,7 @@ export function usePageInteractions(_page: string, nav: NavigateFunction) {
       },
       switchAuditTab: () => {
         const tab = String(args[1] ?? arg0)
-        if (tab.includes('data')) nav('/quality')
+        if (tab.includes('data')) nav('/quality/data')
         else if (tab.includes('fair')) nav('/quality/fairness')
         else nav('/quality/audit')
       },
@@ -220,10 +272,77 @@ export function usePageInteractions(_page: string, nav: NavigateFunction) {
       },
       highlightResident: () => showToast(`Resident ${arg0} highlighted`, 'رہائشی'),
       submit: () => showToast('Form submitted', 'جمع'),
+
+      // ── Dispatch ────────────────────────────────────────────
+      executeDispatchApproval: () => {
+        store.approveAllAssignments()
+        store.addAuditEntry({ action: 'Approved all proposed dispatches', user: store.user?.name || 'Operator', caseId: 'BATCH', type: 'dispatch' })
+        el('modalApproveAll')?.classList.add('hidden')
+        showToast('All dispatches approved', 'تمام روانگیاں منظور ہو گئیں')
+      },
+
+      // ── Resident simulation ─────────────────────────────────
+      handleResidentReply: () => residentReply(Number(arg0), String(args[1] ?? '')),
+      handleCustomSend: () => {
+        const input = el('phone-sms-input') as HTMLInputElement | null
+        const raw = (input?.value || '').trim()
+        const n = ['1', '2', '3'].includes(raw[0]) ? Number(raw[0]) : 0
+        if (!n) return showToast('Type 1, 2 or 3 to reply', 'جواب کے لیے ۱، ۲ یا ۳ لکھیں', 'warning')
+        residentReply(n, raw)
+        if (input) input.value = ''
+      },
+      triggerBroadcastAlert: () => {
+        setText('log-text', 'Evacuation alert broadcast over SMS, IVR and FM mesh to 14,000 offline households.')
+        store.advanceAlertLevel()
+        showToast('Alert broadcast to all channels', 'الرٹ تمام چینلز پر نشر ہو گیا', 'warning')
+      },
+      triggerSilenceTimeout: () => {
+        setText('ladder-badge', 'STAGE 3 ACTIVE')
+        setText('log-text', 'No reply after 10 minutes. Escalated to a neighbour buddy and a volunteer visit.')
+        showToast('Silence timeout, escalating', 'جواب نہیں ملا، معاملہ آگے بڑھایا گیا', 'warning')
+      },
+      resetSimulation: () => {
+        const bubble = el('simulated-reply-bubble')
+        bubble?.classList.add('hidden')
+        bubble?.classList.remove('flex')
+        setText('ladder-badge', 'STAGE 2 ACTIVE')
+        setText('log-text', 'Target resident phone +92 300 8492011 pinged over USSD/SMS. Waiting for citizen keypress [1, 2, or 3] or voice pickup.')
+        showToast('Simulation reset', 'سمولیشن ری سیٹ ہو گئی', 'info')
+      },
+
+      // ── Volunteer task detail ───────────────────────────────
+      handleRescueOutcome: () => {
+        const kind = String(arg0)
+        const id = 'PK-KHI-7821'
+        if (kind === 'safe') {
+          store.markCaseSafe(id)
+          store.addAuditEntry({ action: 'Volunteer confirmed resident safe', user: store.user?.name || 'Volunteer', caseId: id, type: 'safe' })
+          showToast('Marked safe. Syncing when online.', 'محفوظ نشان ہو گیا۔ آن لائن ہوتے ہی سنک ہو گا۔')
+        } else if (kind === 'blocked') {
+          showToast('Route blocked reported to command', 'راستہ بند ہونے کی اطلاع کمانڈ کو دی گئی', 'warning')
+        } else {
+          showToast('Backup requested, boat dispatched', 'مدد طلب کر لی گئی، کشتی روانہ', 'error')
+        }
+      },
+      togglePhotoPreview: () => el('photo-preview-box')?.classList.remove('hidden'),
+      clearPhotoPreview: () => el('photo-preview-box')?.classList.add('hidden'),
+      submitStatusUpdate: () => {
+        store.addAuditEntry({ action: 'Field status update submitted', user: store.user?.name || 'Volunteer', caseId: 'PK-KHI-7821', type: 'assign' })
+        showToast(store.isOnline ? 'Status submitted' : 'Saved offline, will sync later', store.isOnline ? 'حالت جمع ہو گئی' : 'آف لائن محفوظ، بعد میں سنک ہو گا')
+      },
+
+      // ── Fairness modal ──────────────────────────────────────
+      openFairnessModal: () => toggleHidden(el('fairness-modal'), true),
+      closeFairnessModal: () => toggleHidden(el('fairness-modal'), false),
+      confirmFairnessModal: () => {
+        toggleHidden(el('fairness-modal'), false)
+        store.addAuditEntry({ action: 'Equity redistribution applied (1.45x boost)', user: store.user?.name || 'Operator', caseId: 'BATCH', type: 'override', reason: 'Cellular blackout correction' })
+        showToast('Equity correction applied and logged', 'مساوات کی درستگی لاگو اور درج ہو گئی')
+      },
     }
 
     if (actions[action]) actions[action]()
-    else showToast(action.replace(/([A-Z])/g, ' $1'), 'عمل مکمل')
+    else if (!runExpression(action, target)) showToast(action.replace(/([A-Z])/g, ' $1'), 'عمل مکمل')
   }
 
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
@@ -261,6 +380,8 @@ export function usePageInteractions(_page: string, nav: NavigateFunction) {
       if (beacon && textOf(beacon).includes('Fatima')) store.openCaseDrawer('PK-KHI-7821')
       return
     }
+    // Buttons with an explicit action were fully handled above; skip text-sniffing for them.
+    if (btn.hasAttribute('data-action')) return
     const label = textOf(btn)
 
     if (label === 'EN' || label.startsWith('EN ')) store.setLanguage('en')
@@ -299,7 +420,7 @@ export function usePageInteractions(_page: string, nav: NavigateFunction) {
       nav('/command')
     } else if (label.includes('Field Volunteer') || label.includes('فیلڈ رضاکار')) {
       store.login(ROLE_USERS.volunteer)
-      nav('/tasks')
+      nav('/field/tasks')
     } else if (label.includes('Registrar') || label.includes('رجسٹرار')) {
       store.login(ROLE_USERS.registrar)
       nav('/register')
@@ -385,7 +506,7 @@ export function usePageInteractions(_page: string, nav: NavigateFunction) {
       }
     }
 
-    const tabLike = /Tier 1|Tier 2|Unknown|All \(/.test(label)
+    const tabLike = !btn.hasAttribute('data-action') && /^(Tier [12]\b|Unknown|All \()/.test(label)
     if (tabLike) {
       btn.parentElement?.querySelectorAll('button').forEach((b) => {
         b.classList.remove('bg-surface-container-high', 'bg-error-container/30', 'font-semibold')

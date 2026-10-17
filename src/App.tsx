@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useStore, type Role } from './store'
 import LoginPage from './pages/LoginPage'
+import LandingPage from './pages/LandingPage'
 import CommandPage from './pages/CommandPage'
 import CaseDrawerPage from './pages/CaseDrawerPage'
 import DispatchPage from './pages/DispatchPage'
@@ -17,6 +18,9 @@ import ShelterPage from './pages/ShelterPage'
 import QualityDataPage from './pages/QualityDataPage'
 import QualityFairnessPage from './pages/QualityFairnessPage'
 import QualityAuditPage from './pages/QualityAuditPage'
+import AdminDemoPage from './pages/AdminDemoPage'
+import CommunitySheltersPage from './pages/CommunitySheltersPage'
+import { watchBilingual } from './lib/bilingual'
 import Toast from './components/Toast'
 import CaseDrawer from './components/CaseDrawer'
 import Sidebar from './components/Sidebar'
@@ -32,17 +36,21 @@ const ROLE_HOMES: Record<Role, string> = {
 }
 
 const ROLE_ALLOWED: Record<Role, string[]> = {
-  coordinator: ['/command', '/command/case/:id', '/dispatch', '/simulate', '/intake', '/resident-sim', '/quality/data', '/quality/fairness', '/quality/audit'],
+  coordinator: ['/command', '/command/case/:id', '/dispatch', '/simulate', '/intake', '/resident-sim', '/admin', '/quality/data', '/quality/fairness', '/quality/audit'],
   volunteer: ['/field/tasks', '/field/task/:id', '/field/buddy', '/field/sync'],
   registrar: ['/register'],
   shelter: ['/shelter'],
   viewer: ['/command', '/quality/audit', '/quality/data', '/quality/fairness'],
 }
 
+/** Screens every signed-in role can open. */
+const SHARED_ROUTES = ['/community-shelters']
+
 function isAllowed(role: Role, pathname: string): boolean {
+  if (SHARED_ROUTES.includes(pathname)) return true
   const patterns = ROLE_ALLOWED[role] || []
   return patterns.some((p) => {
-    const re = new RegExp('^' + p.replace(':id', '[^/]+').replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace('\\*', '.*') + '$')
+    const re = new RegExp('^' + p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(':id', '[^/]+') + '$')
     return re.test(pathname)
   })
 }
@@ -54,7 +62,8 @@ function Guard({ children }: { children: React.ReactNode }) {
     if (loc.pathname !== '/' && loc.pathname !== '/login') return <Navigate to="/login" replace />
     return <>{children}</>
   }
-  if (loc.pathname === '/' || loc.pathname === '/login') return <Navigate to={ROLE_HOMES[user.role]} replace />
+  if (loc.pathname === '/') return <>{children}</>
+  if (loc.pathname === '/login') return <Navigate to={ROLE_HOMES[user.role]} replace />
   if (!isAllowed(user.role, loc.pathname)) return <Navigate to={ROLE_HOMES[user.role]} replace />
   return <>{children}</>
 }
@@ -68,24 +77,45 @@ function Boot() {
     document.documentElement.classList.remove('light', 'dark')
     document.documentElement.classList.add(theme)
   }, [language, theme])
+
+  // Follow the selected language on the bilingual exported screens.
+  const { pathname } = useLocation()
+  useEffect(() => {
+    const main = document.querySelector('main')
+    if (!main) return
+    return watchBilingual(main, () => useStore.getState().language)
+  }, [language, pathname])
   return null
 }
 
 export default function App() {
-  const user = useStore((s) => s.user)
-  const isMobile = user?.role === 'volunteer' || user?.role === 'registrar' || user?.role === 'shelter'
-
   return (
     <BrowserRouter>
       <Boot />
+      <Shell />
+      <CaseDrawer />
+      <Toast />
+    </BrowserRouter>
+  )
+}
+
+function Shell() {
+  const loggedIn = useStore((s) => s.user)
+  const { pathname } = useLocation()
+  // The landing page (/) and login are full-bleed: no sidebar, top bar or tab bar.
+  const user = pathname === '/' || pathname === '/login' ? null : loggedIn
+  const isMobile = user?.role === 'volunteer' || user?.role === 'registrar' || user?.role === 'shelter'
+
+  return (
+    <>
       <div className="flex min-h-screen bg-background text-on-surface font-body-md">
         {user && !isMobile && <Sidebar />}
-        <div className={`flex-1 flex flex-col min-h-screen ${!isMobile ? 'lg:pl-64 lg:rtl:pl-0 lg:rtl:pr-64' : ''}`}>
+        <div className={`flex-1 flex flex-col min-h-screen ${user && !isMobile ? 'lg:pl-64 lg:rtl:pl-0 lg:rtl:pr-64' : ''}`}>
           {user && <TopBar />}
-          <main className={`flex-1 w-full ${isMobile ? 'pt-30 pb-24' : 'pt-24 pb-16'} px-margin lg:px-space-lg`}>
+          <main className={`flex-1 w-full mx-auto ${!user ? 'max-w-none !p-0' : isMobile ? 'pt-32 pb-28 max-w-[560px]' : 'pt-28 pb-16 max-w-[1520px]'} px-margin lg:px-space-lg`}>
             <Guard>
               <Routes>
-                <Route path="/" element={<LoginPage />} />
+                <Route path="/" element={<LandingPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/command" element={<CommandPage />} />
                 <Route path="/command/case/:id" element={<CaseDrawerPage />} />
@@ -97,6 +127,8 @@ export default function App() {
                 <Route path="/field/buddy" element={<BuddyPage />} />
                 <Route path="/field/sync" element={<SyncPage />} />
                 <Route path="/resident-sim" element={<ResidentSimPage />} />
+                <Route path="/admin" element={<AdminDemoPage />} />
+                <Route path="/community-shelters" element={<CommunitySheltersPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/shelter" element={<ShelterPage />} />
                 <Route path="/quality/data" element={<QualityDataPage />} />
@@ -109,8 +141,6 @@ export default function App() {
           {user && isMobile && <BottomTabBar />}
         </div>
       </div>
-      <CaseDrawer />
-      <Toast />
-    </BrowserRouter>
+    </>
   )
 }

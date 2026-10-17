@@ -17,6 +17,8 @@ const ROLE_NAV: Record<Role, NavItem[]> = {
     { key: 'quality', path: '/quality/data', icon: 'verified_user' },
     { key: 'intake', path: '/intake', icon: 'record_voice_over', badge: 'LIVE' },
     { key: 'residentSim', path: '/resident-sim', icon: 'contact_emergency' },
+    { key: 'communityShelters', path: '/community-shelters', icon: 'volunteer_activism' },
+    { key: 'adminDemo', path: '/admin', icon: 'tune' },
   ],
   volunteer: [],
   registrar: [],
@@ -24,6 +26,7 @@ const ROLE_NAV: Record<Role, NavItem[]> = {
   viewer: [
     { key: 'command', path: '/command', icon: 'grid_view' },
     { key: 'qualityAudit', path: '/quality/audit', icon: 'verified_user' },
+    { key: 'communityShelters', path: '/community-shelters', icon: 'volunteer_activism' },
   ],
 }
 

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { INITIAL_COMMUNITY_SHELTERS, type CommunityShelter } from '../data/communityShelters'
 
 export type Role = 'coordinator' | 'volunteer' | 'registrar' | 'shelter' | 'viewer'
 export type Language = 'en' | 'ur'
@@ -111,6 +112,7 @@ interface AppState {
   showTidal: boolean
   playback: { playing: boolean; progress: number }
   registrations: { id: string; name: string; age: number; area: string; time: string }[]
+  communityShelters: CommunityShelter[]
   resident: {
     name: string
     phone: string
@@ -153,6 +155,12 @@ interface AppState {
   markAllNotificationsRead: () => void
   tickCountdown: () => void
   addRegistration: (r: { name: string; age: number; area: string }) => void
+  addCommunityShelter: (s: CommunityShelter) => void
+  reserveCommunitySpace: (id: string, people: number) => void
+  setAlertLevel: (lv: AppState['alertLevel']) => void
+  setHazardCountdown: (sec: number) => void
+  seedCases: (cases: Case[]) => void
+  resetDemo: () => void
 }
 
 const INITIAL_CASES: Case[] = [
@@ -219,9 +227,10 @@ export const useStore = create<AppState>()(
       showTidal: false,
       playback: { playing: false, progress: 0 },
       registrations: [],
+      communityShelters: INITIAL_COMMUNITY_SHELTERS,
       resident: { name: 'Rashid Ali', phone: '+92 300 8492011', phoneType: 'basic', language: 'ur', flags: ['Elderly household'] },
 
-      login: (user) => set({ user: { phone: user.phone || user.email, ...user } }),
+      login: (user) => set({ user: { ...user, phone: user.phone || user.email } }),
       logout: () => set({ user: null }),
       updateUser: (partial) => set((s) => ({ user: s.user ? { ...s.user, ...partial } : null })),
       setLanguage: (lang) => {
@@ -239,22 +248,23 @@ export const useStore = create<AppState>()(
       openCaseDrawer: (id) => set({ showCaseDrawer: true, selectedCaseId: id }),
       closeCaseDrawer: () => set({ showCaseDrawer: false, selectedCaseId: null }),
       showToast: (msg, msgUrdu, type) => {
-        set({ toast: { visible: true, message: msg, messageUrdu, type } })
+        set({ toast: { visible: true, message: msg, messageUrdu: msgUrdu, type } })
         setTimeout(() => get().hideToast(), 2800)
       },
       hideToast: () => set((s) => ({ toast: { ...s.toast, visible: false } })),
       markCaseSafe: (id) => set((s) => ({
         cases: s.cases.map((c) => (c.id === id ? { ...c, status: 'safe' as const } : c)),
       })),
-      dispatchCase: (id, asset) => set((s) => ({
-        cases: s.cases.map((c) => (c.id === id ? { ...c, status: 'dispatched' as const } : c)),
-        assignments: [
-          { id: `asg-${Date.now()}`, caseId: id, caseName: c?.name || id, asset: asset || 'boat', assetLabel: asset === 'ambulance' ? 'Ambulance' : asset === 'team' ? 'Scout Team' : 'Boat Unit', status: 'dispatched', pinned: false, etaMin: Math.floor(Math.random() * 15 + 8) },
-          ...s.assignments,
-        ].map((a) => a.caseId === id ? a : a),
-        auditLog: [{ id: `a${Date.now()}`, action: 'Case dispatched for rescue', user: s.user?.name || 'System', caseId: id, timestamp: new Date().toISOString(), type: 'dispatch' as const }, ...s.auditLog],
-        timeline: [{ id: `t${Date.now()}`, caseId: id, text: 'Rescue team dispatched', at: new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) }, ...s.timeline],
-      })),
+      dispatchCase: (id, asset) => set((s) => {
+        const c = s.cases.find((x) => x.id === id)
+        const newAssignment: Assignment = { id: `asg-${Date.now()}`, caseId: id, caseName: c?.name || id, asset: asset || 'boat', assetLabel: asset === 'ambulance' ? 'Ambulance' : asset === 'team' ? 'Scout Team' : 'Boat Unit', status: 'dispatched', pinned: false, etaMin: Math.floor(Math.random() * 15 + 8) }
+        return {
+          cases: s.cases.map((x) => (x.id === id ? { ...x, status: 'dispatched' as const } : x)),
+          assignments: [newAssignment, ...s.assignments],
+          auditLog: [{ id: `a${Date.now()}`, action: 'Case dispatched for rescue', user: s.user?.name || 'System', caseId: id, timestamp: new Date().toISOString(), type: 'dispatch' as const }, ...s.auditLog],
+          timeline: [{ id: `t${Date.now()}`, caseId: id, text: 'Rescue team dispatched', at: new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) }, ...s.timeline],
+        }
+      }),
       acceptCase: (id) => set((s) => ({
         cases: s.cases.map((c) => (c.id === id ? { ...c, status: 'accepted' as const } : c)),
         auditLog: [{ id: `a${Date.now()}`, action: 'Recommendation accepted', user: s.user?.name || 'System', caseId: id, timestamp: new Date().toISOString(), type: 'accept' as const }, ...s.auditLog],
@@ -294,6 +304,22 @@ export const useStore = create<AppState>()(
       markAllNotificationsRead: () => set((s) => ({ notifications: s.notifications.map((n) => ({ ...n, read: true })) })),
       tickCountdown: () => set((s) => ({ hazardCountdown: Math.max(0, s.hazardCountdown - 1) })),
       addRegistration: (r) => set((s) => ({ registrations: [{ id: `reg-${Date.now()}`, ...r, time: new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) }, ...s.registrations] })),
+      addCommunityShelter: (sh) => set((s) => ({ communityShelters: [sh, ...s.communityShelters] })),
+      reserveCommunitySpace: (id, people) => set((s) => ({
+        communityShelters: s.communityShelters.map((x) => (x.id === id ? { ...x, free: Math.max(0, x.free - people) } : x)),
+      })),
+      setAlertLevel: (lv) => set({ alertLevel: lv }),
+      setHazardCountdown: (sec) => set({ hazardCountdown: sec }),
+      seedCases: (cs) => set((s) => ({ cases: [...cs.filter((c) => !s.cases.some((x) => x.id === c.id)), ...s.cases] })),
+      resetDemo: () => set({
+        cases: INITIAL_CASES, assignments: INITIAL_ASSIGNMENTS, syncItems: INITIAL_SYNC, auditLog: INITIAL_AUDIT,
+        timeline: [], registrations: [], communityShelters: INITIAL_COMMUNITY_SHELTERS, alertLevel: 'warning', hazardCountdown: 13330,
+        notifications: [
+          { id: 'n1', text: 'Tier 1 alert: Fatima Bibi – no response 2h 45m', read: false },
+          { id: 'n2', text: 'Water level +2.1m at Lyari Nadi sensor LK-91', read: false },
+          { id: 'n3', text: 'Boat Unit 04 dispatched to Sector 4-B', read: false },
+        ],
+      }),
     }),
     {
       name: 'nlb-app-state',
@@ -301,7 +327,7 @@ export const useStore = create<AppState>()(
         user: s.user, language: s.language, theme: s.theme, isOnline: s.isOnline,
         alertLevel: s.alertLevel, cases: s.cases, auditLog: s.auditLog,
         syncItems: s.syncItems, notifications: s.notifications, hazardCountdown: s.hazardCountdown,
-        assignments: s.assignments, registrations: s.registrations, resident: s.resident,
+        assignments: s.assignments, registrations: s.registrations, resident: s.resident, communityShelters: s.communityShelters,
       }),
     }
   )
