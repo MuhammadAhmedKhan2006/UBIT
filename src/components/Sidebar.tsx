@@ -34,7 +34,7 @@ export default function Sidebar() {
   const items = ROLE_NAV[user.role] || []
 
   return (
-    <aside className="hidden lg:flex fixed left-0 top-0 h-full w-64 bg-surface-container-low/95 backdrop-blur-2xl z-50 flex-col justify-between py-space-md shadow-[0_1px_8px_rgba(0,0,0,0.4)] rtl:left-auto rtl:right-0">
+    <aside className="hidden lg:flex fixed left-0 rtl:left-auto rtl:right-0 top-0 h-full w-64 bg-surface-container-low/95 backdrop-blur-2xl z-50 flex-col justify-between py-space-md shadow-[0_1px_8px_rgba(0,0,0,0.4)]">
       <div className="flex flex-col gap-space-md">
         <div className="px-space-md flex items-center gap-space-sm">
           <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_12px_rgba(242,169,59,0.7)]" />

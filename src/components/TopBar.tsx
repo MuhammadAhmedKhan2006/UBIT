@@ -135,7 +135,7 @@ export default function TopBar() {
   // Desktop header
   return (
     <>
-      <header className="fixed top-0 left-0 lg:left-64 right-0 z-40 bg-surface-container-low/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.3)] rtl:left-0 rtl:right-auto rtl:lg:right-64">
+      <header className="fixed top-0 left-0 lg:left-64 right-0 z-40 bg-surface-container-low/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.3)] rtl:left-auto rtl:right-0 rtl:lg:left-0 rtl:lg:right-64">
         <div className="w-full px-space-md py-space-xs bg-surface-container-lowest/80 flex items-center justify-center gap-space-sm font-telemetry-sm text-telemetry-sm text-primary">
           <span className="material-symbols-outlined text-telemetry-md">bolt</span>
           <span className="tracking-wide">Synthetic demo data, weights are expert assumptions, not validated</span>

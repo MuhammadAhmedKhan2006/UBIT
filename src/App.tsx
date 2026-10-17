@@ -80,7 +80,7 @@ export default function App() {
       <Boot />
       <div className="flex min-h-screen bg-background text-on-surface font-body-md">
         {user && !isMobile && <Sidebar />}
-        <div className={`flex-1 flex flex-col min-h-screen ${!isMobile ? 'lg:pl-64' : ''}`}>
+        <div className={`flex-1 flex flex-col min-h-screen ${!isMobile ? 'lg:pl-64 lg:rtl:pl-0 lg:rtl:pr-64' : ''}`}>
           {user && <TopBar />}
           <main className={`flex-1 w-full ${isMobile ? 'pt-30 pb-24' : 'pt-24 pb-16'} px-margin lg:px-space-lg`}>
             <Guard>
