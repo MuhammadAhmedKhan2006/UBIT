@@ -199,6 +199,11 @@ export async function fetchProfile(userId: string): Promise<User | null> {
 export async function fetchSnapshot(): Promise<Snapshot | null> {
   if (!supabaseConfigured) return null
 
+  // Viewers only ever see the anonymised, aggregated view (names, phones, exact locations are stripped in SQL).
+  const { data: sess } = await supabase.auth.getSession()
+  const me = sess.session?.user.id ? await fetchProfile(sess.session.user.id) : null
+  const casesTable = me?.role === 'viewer' ? 'cases_anonymised' : 'cases'
+
   const [
     casesRes,
     asgRes,
@@ -213,7 +218,7 @@ export async function fetchSnapshot(): Promise<Snapshot | null> {
     taskRes,
     cfgRes,
   ] = await Promise.all([
-    supabase.from('cases').select('*').order('tier', { ascending: true }).order('risk', { ascending: false }),
+    supabase.from(casesTable).select('*').order('tier', { ascending: true }).order('risk', { ascending: false }),
     supabase.from('assignments').select('*').order('created_at', { ascending: false }),
     supabase.from('sync_queue').select('*').order('priority', { ascending: true }),
     supabase.from('audit_log').select('*').order('timestamp', { ascending: false }).limit(80),
@@ -408,7 +413,7 @@ export async function insertTimeline(caseId: string, text: string, userId?: stri
   })
 }
 
-export async function insertRegistration(r: { name: string; age: number; area: string; registrarId?: string }) {
+export async function insertRegistration(r: { name: string; age: number; area: string; phone?: string; registrarId?: string }) {
   if (!supabaseConfigured) return
   const { data } = await supabase
     .from('registrations')
@@ -416,6 +421,7 @@ export async function insertRegistration(r: { name: string; age: number; area: s
       name: r.name,
       age: r.age,
       area: r.area,
+      phone: r.phone || null,
       registrar_id: r.registrarId || null,
     })
     .select('id, name, age, area, created_at')

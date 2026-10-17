@@ -1,0 +1,21 @@
+project_id = "nobody-left-behind"
+
+# These two are called by Telegram / a scheduler, not by a signed-in browser user.
+# They authenticate themselves (webhook secret header / x-cron-secret).
+[functions.telegram-webhook]
+verify_jwt = false
+
+[functions.tick]
+verify_jwt = false
+
+[functions.recompute]
+verify_jwt = true
+
+[functions.send-message]
+verify_jwt = true
+
+[functions.intake-parse]
+verify_jwt = true
+
+[functions.seed-reset-demo]
+verify_jwt = true

@@ -7,6 +7,15 @@
 --   4. database/sql/04_rls.sql
 --   5. database/sql/05_views_realtime_grants.sql
 --   6. database/sql/06_seed.sql
+--   7. database/sql/07_authenticated_reads.sql
+--   8. database/sql/08_pdf_backend.sql   (check-ins, invite codes, anonymised viewer, demo reset)
+--   9. database/sql/09_registration_to_case.sql   (registrations become scored cases)
+--
+-- Edge Functions (supabase/functions): recompute, tick, send-message, intake-parse,
+-- telegram-webhook, seed-reset-demo. Deploy with `supabase functions deploy <name>` and set secrets:
+--   supabase secrets set CRON_SECRET=... TELEGRAM_BOT_TOKEN=... TELEGRAM_WEBHOOK_SECRET=...
+-- Run `tick` every minute (Dashboard -> Integrations -> Cron, or pg_cron + pg_net) with header
+--   x-cron-secret: <CRON_SECRET>
 --
 -- Enable PostGIS first: Dashboard → Database → Extensions → postgis
 -- (01 also runs CREATE EXTENSION IF NOT EXISTS postgis.)

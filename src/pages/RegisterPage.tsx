@@ -11,7 +11,8 @@ export default function RegisterPage() {
   const submitReg = () => {
     const name = (document.getElementById('fullName') as HTMLInputElement | null)?.value.trim() || 'Unnamed resident'
     const age = 0
-    addRegistration({ name, age, area: 'Lyari Sector 4-B' })
+    const phone = (document.getElementById('contactPhone') as HTMLInputElement | null)?.value.trim() || undefined
+    addRegistration({ name, age, area: 'Lyari Sector 4-B', phone })
     showToast('Registration saved', 'اندراج محفوظ ہو گیا', 'success')
   }
   return (

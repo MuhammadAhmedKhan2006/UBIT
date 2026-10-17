@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useStore } from '../store'
 import { t } from '../i18n'
 import Modal from '../components/Modal'
+import { describeRoute, sendMessage, withBackend } from '../lib/functions'
 
 export default function CaseDrawerPage() {
   const { selectedCaseId, cases, closeCaseDrawer, dispatchCase, markCaseSafe, acceptCase, assignVolunteer, addAuditEntry, addTimeline, showToast, timeline } = useStore()
@@ -53,8 +54,14 @@ export default function CaseDrawerPage() {
   }
   const handleSendMessage = () => {
     if (!messageText.trim()) return
-    addTimeline(selectedCase.id, `Message: "${messageText}"`)
-    showToast(t('messageSent', 'en'), t('messageSent', 'ur'), 'success')
+    const text = messageText.trim()
+    const sent = withBackend(() => sendMessage(selectedCase.id, 'custom', { text }), (r) => {
+      showToast(`Sent via ${describeRoute(r as never) || 'router'}`, t('messageSent', 'ur'), 'success')
+    })
+    if (!sent) {
+      addTimeline(selectedCase.id, `Message: "${text}"`)
+      showToast(t('messageSent', 'en'), t('messageSent', 'ur'), 'success')
+    }
     setMessageText('')
     setShowSendMsg(false)
   }

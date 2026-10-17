@@ -161,7 +161,7 @@ interface AppState {
   syncOutbox: () => void
   markAllNotificationsRead: () => void
   tickCountdown: () => void
-  addRegistration: (r: { name: string; age: number; area: string }) => void
+  addRegistration: (r: { name: string; age: number; area: string; phone?: string }) => void
   navOpen: boolean
   setNavOpen: (open: boolean) => void
   addCommunityShelter: (s: CommunityShelter) => void

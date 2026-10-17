@@ -37,7 +37,7 @@ const ROLE_HOMES: Record<Role, string> = {
 }
 
 const ROLE_ALLOWED: Record<Role, string[]> = {
-  coordinator: ['/command', '/command/case/:id', '/dispatch', '/simulate', '/intake', '/resident-sim', '/admin', '/quality/data', '/quality/fairness', '/quality/audit'],
+  coordinator: ['/command', '/command/case/:id', '/dispatch', '/simulate', '/intake', '/resident-sim', '/admin', '/admin/demo', '/quality/data', '/quality/fairness', '/quality/audit'],
   volunteer: ['/field/tasks', '/field/task/:id', '/field/buddy', '/field/sync'],
   registrar: ['/register'],
   shelter: ['/shelter'],
@@ -45,7 +45,7 @@ const ROLE_ALLOWED: Record<Role, string[]> = {
 }
 
 /** Screens every signed-in role can open. */
-const SHARED_ROUTES = ['/community-shelters']
+const SHARED_ROUTES = ['/community-shelters', '/resident-sim']
 
 function isAllowed(role: Role, pathname: string): boolean {
   if (SHARED_ROUTES.includes(pathname)) return true
@@ -130,6 +130,7 @@ function Shell() {
                 <Route path="/field/sync" element={<SyncPage />} />
                 <Route path="/resident-sim" element={<ResidentSimPage />} />
                 <Route path="/admin" element={<AdminDemoPage />} />
+                <Route path="/admin/demo" element={<AdminDemoPage />} />
                 <Route path="/community-shelters" element={<CommunitySheltersPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/shelter" element={<ShelterPage />} />

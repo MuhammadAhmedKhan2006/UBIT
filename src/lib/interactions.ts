@@ -1,6 +1,7 @@
 import { useEffect, type FormEvent, type MouseEvent, type ChangeEvent } from 'react'
 import type { NavigateFunction } from 'react-router-dom'
 import { useStore, type Role } from '../store'
+import { callFn, demoControl, parseIntake, recompute, withBackend } from './functions'
 
 const ROLE_USERS: Record<string, { name: string; nameUrdu: string; email: string; phone: string; role: Role; roleLabel: string; home: string }> = {
   coordinator: {
@@ -112,6 +113,15 @@ function residentReply(n: number, text: string) {
   setText('log-text', o[0])
   setText('ladder-badge', n === 1 ? 'RESOLVED' : n === 3 ? 'STAGE 4 ACTIVE' : 'STAGE 3 ACTIVE')
   showToast(o[0], o[1], o[2] as 'success' | 'warning' | 'error')
+
+  // Real backend: log the reply, reset silence, raise the tier and re-match resources.
+  withBackend(
+    () => callFn('send-message', { sim: true, kind: 'simulate_reply', code: n, text: text.replace(/&amp;/g, '&'), channel: 'sms' }),
+    (r) => {
+      const res = r as { caseName?: string; tier?: number }
+      if (res.caseName) setText('log-text', `${o[0]} (${res.caseName}, now Tier ${res.tier}). Saved to Supabase.`)
+    },
+  )
 }
 
 /** Tiny, safe interpreter for the few inline expressions the exported markup uses. */
@@ -127,7 +137,9 @@ function runExpression(expr: string, target: HTMLElement): boolean {
         handled = true
       }
     } else if (/^triggerRecalculateNotification\(\)$/.test(stmt)) {
-      useStore.getState().recomputeAssignments()
+      // With a real session the road closure is stored and the optimizer re-routes land vehicles server-side.
+      if (!withBackend(() => demoControl('close_road', { on: true }))) useStore.getState().recomputeAssignments()
+      else useStore.getState().setSim({ roadClosed: true })
       showToast('Routes recalculated around closed road', 'بند سڑک کے گرد راستے دوبارہ ترتیب دیے گئے', 'info')
       handled = true
     } else if (stmt === 'this.parentElement.remove()') {
@@ -233,9 +245,24 @@ export function usePageInteractions(_page: string, nav: NavigateFunction) {
         target.classList.toggle('bg-error')
         showToast('Cell tower outage toggled', 'ٹاور')
       },
-      toggleRoadClosure: () => showToast('Road closure toggled', 'سڑک بند'),
-      toggleBoatFailure: () => showToast('Boat failure toggled', 'کشتی'),
-      toggleHeatwave: () => showToast('Heatwave overlay toggled', 'گرمی'),
+      toggleRoadClosure: () => {
+        const next = !store.sim.roadClosed
+        store.setSim({ roadClosed: next })
+        withBackend(() => demoControl('close_road', { on: next }))
+        showToast(`Road closure ${next ? 'on' : 'off'}`, 'سڑک بند')
+      },
+      toggleBoatFailure: () => {
+        const next = !store.sim.boatBroken
+        store.setSim({ boatBroken: next })
+        withBackend(() => demoControl('boat_broken', { on: next }))
+        showToast(`Boat failure ${next ? 'on' : 'off'}`, 'کشتی')
+      },
+      toggleHeatwave: () => {
+        const next = !store.sim.heatwave
+        store.setSim({ heatwave: next })
+        withBackend(() => demoControl('set_mode', { mode: next ? 'heatwave' : 'flood' }))
+        showToast(`Heatwave mode ${next ? 'on' : 'off'}`, 'گرمی')
+      },
       toggleSmsModal: () => {
         const modal = document.getElementById('sms-modal') || document.querySelector('[id*="sms"]')
         toggleHidden(modal, arg0 === true || arg0 === 'true')
@@ -287,7 +314,17 @@ export function usePageInteractions(_page: string, nav: NavigateFunction) {
         const input = el('phone-sms-input') as HTMLInputElement | null
         const raw = (input?.value || '').trim()
         const n = ['1', '2', '3'].includes(raw[0]) ? Number(raw[0]) : 0
-        if (!n) return showToast('Type 1, 2 or 3 to reply', 'جواب کے لیے ۱، ۲ یا ۳ لکھیں', 'warning')
+        if (!n) {
+          if (!raw) return showToast('Type 1, 2 or 3 to reply', 'جواب کے لیے ۱، ۲ یا ۳ لکھیں', 'warning')
+          // Free text is treated as an incoming report: parsed, deduplicated, queued for human review.
+          const sent = withBackend(() => parseIntake(raw, { channel: 'sms', phone: store.resident.phone }), (r) => {
+            const p = (r as { parsed?: { confidence: number; tier: number }; needs_human_review?: boolean })
+            showToast(`Report parsed: ${p.parsed?.confidence}% confidence, Tier ${p.parsed?.tier}${p.needs_human_review ? ', needs human review' : ''}`, 'رپورٹ کا تجزیہ ہو گیا اور قطار میں شامل', 'info')
+          })
+          if (!sent) showToast('Sign in with a Supabase account to parse reports', 'رپورٹس کے تجزیے کے لیے سپابیس اکاؤنٹ سے لاگ ان کریں', 'warning')
+          if (input) input.value = ''
+          return
+        }
         residentReply(n, raw)
         if (input) input.value = ''
       },
@@ -295,8 +332,17 @@ export function usePageInteractions(_page: string, nav: NavigateFunction) {
         setText('log-text', 'Evacuation alert broadcast over SMS, IVR and FM mesh to 14,000 offline households.')
         store.advanceAlertLevel()
         showToast('Alert broadcast to all channels', 'الرٹ تمام چینلز پر نشر ہو گیا', 'warning')
+        withBackend(() => callFn('send-message', { kind: 'broadcast_alert' }), (r) => {
+          const b = r as { total?: number; by_channel?: Record<string, number> }
+          const parts = Object.entries(b.by_channel || {}).map(([k, v]) => `${k} ${v}`).join(', ')
+          setText('log-text', `Alert sent to ${b.total} households (${parts}).`)
+        })
       },
       triggerSilenceTimeout: () => {
+        withBackend(() => demoControl('simulate_silence', { minutes: 25 }), (r) => {
+          const t = (r as { result?: { checkinsAdvanced?: number } }).result
+          setText('log-text', `Silence ladder ran on the server: ${t?.checkinsAdvanced ?? 0} check-in(s) escalated.`)
+        })
         setText('ladder-badge', 'STAGE 3 ACTIVE')
         setText('log-text', 'No reply after 10 minutes. Escalated to a neighbour buddy and a volunteer visit.')
         showToast('Silence timeout, escalating', 'جواب نہیں ملا، معاملہ آگے بڑھایا گیا', 'warning')
@@ -412,6 +458,10 @@ export function usePageInteractions(_page: string, nav: NavigateFunction) {
     if (label.includes('Broadcast Staged Alert') || label.includes('الرٹ نشر')) {
       store.advanceAlertLevel()
       showToast('Staged alert broadcast', 'الرٹ نشر ہو گیا', 'warning')
+      withBackend(() => callFn('send-message', { kind: 'broadcast_alert' }), (r) => {
+        const b = r as { total?: number }
+        showToast(`Alert delivered to ${b.total ?? 0} households by channel`, 'الرٹ ہر چینل پر بھیج دیا گیا', 'success')
+      })
     }
     if (label.includes('Manage Reserves')) nav('/dispatch')
     if (label.includes('HELP') || label.includes('مدد')) showToast('Call 1129 PDMA Sindh', '1129 پر کال کریں', 'info')
@@ -468,13 +518,25 @@ export function usePageInteractions(_page: string, nav: NavigateFunction) {
       showToast('All items approved', 'منظور')
     }
     if (label.includes('Recompute') || label.includes('حساب')) {
-      showToast('Scores recomputed', 'دوبارہ حساب')
+      const real = withBackend(() => recompute(), (r) => {
+        const x = r as { scored?: number; changed?: number; proposals?: number }
+        showToast(`Rescored ${x.scored}, ${x.changed} changed, ${x.proposals} proposed assignments`, 'سکور اور تجاویز تازہ ہو گئیں', 'success')
+      })
+      if (!real) {
+        store.recomputeAssignments()
+        showToast('Scores recomputed', 'دوبارہ حساب')
+      }
     }
     if (label.includes('Export CSV') || label.includes('CSV')) {
       exportCsv('nlb-export.csv', [['id', 'action'], ...store.auditLog.map((a) => [a.id, a.action])])
       showToast('CSV downloaded', 'برآمد')
     }
     if (label.includes('Run Scenario') || label.includes('منظر')) {
+      const sim = store.sim
+      withBackend(async () => {
+        await callFn('seed-reset-demo', { action: 'break_network', on: !!sim.meshDown })
+        return recompute()
+      })
       showToast('Scenario running', 'منظر نامہ')
     }
     if (label.includes('Reset') || label.includes('ری سیٹ')) {

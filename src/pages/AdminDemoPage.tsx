@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore, type Case, type Role } from '../store'
 import Modal from '../components/Modal'
+import { backendReady, demoControl, type DemoAction } from '../lib/functions'
+import { hydrateFromSupabase } from '../lib/session'
 
 type Lang = 'en' | 'ur'
 type Bi = { en: string; ur: string }
@@ -37,6 +39,8 @@ const TXT = {
   dataHint: { en: 'Add extra synthetic residents or wipe the session back to its starting state.', ur: 'مزید مصنوعی رہائشی شامل کریں یا سیشن کو ابتدائی حالت پر لے جائیں۔' },
   seed: { en: 'Add 3 synthetic cases', ur: '۳ مصنوعی کیس شامل کریں' },
   reset: { en: 'Reset demo', ur: 'ڈیمو ری سیٹ کریں' },
+  storm: { en: 'Play storm', ur: 'طوفان چلائیں' },
+  jump: { en: 'Jump +30 min', ur: '۳۰ منٹ آگے' },
   resetTitle: { en: 'Reset the demo?', ur: 'ڈیمو ری سیٹ کریں؟' },
   resetBody: { en: 'Cases, dispatches, audit entries and the outbox return to their starting values. This cannot be undone.', ur: 'کیسز، روانگیاں، آڈٹ اندراجات اور آؤٹ باکس اپنی ابتدائی حالت پر آ جائیں گے۔ اسے واپس نہیں کیا جا سکتا۔' },
   cancel: { en: 'Cancel', ur: 'منسوخ' },
@@ -179,8 +183,35 @@ export default function AdminDemoPage() {
     showToast(`Scenario loaded: ${sc.name.en}`, `منظر نامہ لوڈ ہوا: ${sc.name.ur}`, 'success')
   }
 
+  /** Mirror the action on Supabase (Edge Function) when signed in with a real account. */
+  const backend = async (action: DemoAction, params: Record<string, unknown> = {}) => {
+    if (!backendReady()) return
+    try {
+      await demoControl(action, params)
+      await hydrateFromSupabase()
+    } catch (e) {
+      showToast(`Backend: ${(e as Error).message}`, 'بیک اینڈ میں خرابی', 'error')
+    }
+  }
+
+  const playStorm = () => {
+    setAlertLevel('evacuation')
+    setHazardCountdown(2400)
+    push({ en: 'Storm played: evacuation stage', ur: 'طوفان چلایا گیا: انخلا مرحلہ' })
+    void backend('play_storm')
+  }
+
+  const jumpTime = () => {
+    setHazardCountdown(Math.max(0, countdown - 1800))
+    push({ en: 'Clock jumped +30 min', ur: 'گھڑی ۳۰ منٹ آگے' })
+    void backend('jump_time', { minutes: 30 })
+  }
+
   const toggleFault = (id: string) => {
     const next = !faults[id]
+    if (id === 'mesh') void backend('break_network', { on: next })
+    if (id === 'road') void backend('close_road', { on: next })
+    if (id === 'boat') void backend('boat_broken', { on: next })
     setFaults({ ...faults, [id]: next })
     if (id === 'mesh') setSim({ meshDown: next })
     if (id === 'road') setSim({ roadClosed: next })
@@ -198,12 +229,14 @@ export default function AdminDemoPage() {
 
   const doSeed = () => {
     seedCases(SCENARIOS[1].cases)
+    void backend('seed', { count: 20 })
     push({ en: 'Added 3 synthetic cases', ur: '۳ مصنوعی کیس شامل کیے گئے' })
     showToast('3 synthetic cases added', '۳ مصنوعی کیس شامل ہو گئے', 'success')
   }
 
   const doReset = () => {
     resetDemo()
+    void backend('reset')
     setScenarioId('karachi-flood')
     setFaults({ mesh: true })
     setLog([])
@@ -375,6 +408,12 @@ export default function AdminDemoPage() {
             <div className="flex flex-col gap-space-sm">
               <button type="button" onClick={doSeed} className={`min-h-[48px] rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold flex items-center justify-center gap-space-sm transition-all ${ur ? 'font-urdu-body' : ''}`}>
                 <span className="material-symbols-outlined text-secondary">person_add</span>{L(TXT.seed)}
+              </button>
+              <button type="button" onClick={playStorm} className={`min-h-[48px] rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold flex items-center justify-center gap-space-sm transition-all ${ur ? 'font-urdu-body' : ''}`}>
+                <span className="material-symbols-outlined text-tertiary">thunderstorm</span>{L(TXT.storm)}
+              </button>
+              <button type="button" onClick={jumpTime} className={`min-h-[48px] rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-semibold flex items-center justify-center gap-space-sm transition-all ${ur ? 'font-urdu-body' : ''}`}>
+                <span className="material-symbols-outlined text-primary">update</span>{L(TXT.jump)}
               </button>
               <button type="button" onClick={() => setConfirmReset(true)} className={`min-h-[48px] rounded-xl bg-error-container/30 hover:bg-error-container/50 text-error font-semibold flex items-center justify-center gap-space-sm transition-all ${ur ? 'font-urdu-body' : ''}`}>
                 <span className="material-symbols-outlined">restart_alt</span>{L(TXT.reset)}

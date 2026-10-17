@@ -27,6 +27,7 @@ const ROLE_NAV: Record<Role, NavItem[]> = {
   viewer: [
     { key: 'command', path: '/command', icon: 'grid_view' },
     { key: 'qualityAudit', path: '/quality/audit', icon: 'verified_user' },
+    { key: 'residentSim', path: '/resident-sim', icon: 'contact_emergency' },
     { key: 'communityShelters', path: '/community-shelters', icon: 'volunteer_activism' },
   ],
 }
