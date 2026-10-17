@@ -1,0 +1,9 @@
+{
+  "name": "Nobody Left Behind",
+  "short_name": "NLB",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#091519",
+  "theme_color": "#091519",
+  "lang": "en"
+}
