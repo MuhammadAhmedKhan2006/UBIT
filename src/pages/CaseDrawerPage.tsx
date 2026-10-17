@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../store'
+import { t } from '../i18n'
 import Modal from '../components/Modal'
 
 export default function CaseDrawerPage() {
@@ -23,37 +24,37 @@ export default function CaseDrawerPage() {
 
   const handleDispatch = () => {
     dispatchCase(selectedCase.id, 'boat')
-    showToast('Rescue team dispatched', 'ریسکیو ٹیم روانہ ہو گئی', 'success')
+    showToast(t('rescueDispatched', 'en'), t('rescueDispatched', 'ur'), 'success')
     closeCaseDrawer()
   }
   const handleMarkSafe = () => {
     markCaseSafe(selectedCase.id)
     addAuditEntry({ action: 'Case marked as safe', user: useStore.getState().user?.name || 'Coordinator', caseId: selectedCase.id, type: 'safe' })
-    showToast('Case marked as safe', 'کیس محفوظ قرار دیا گیا', 'success')
+    showToast(t('caseMarkedSafe', 'en'), t('caseMarkedSafe', 'ur'), 'success')
     closeCaseDrawer()
     setShowSafeConfirm(false)
   }
   const handleOverride = () => {
     if (!overrideReason.trim()) return
     addAuditEntry({ action: `Override: ${overrideReason}`, user: useStore.getState().user?.name || 'Coordinator', caseId: selectedCase.id, reason: overrideReason, type: 'override' })
-    showToast('Case overridden', 'کیس اوور رائیڈ ہو گیا', 'warning')
+    showToast(t('caseOverridden', 'en'), t('caseOverridden', 'ur'), 'warning')
     setShowOverride(false)
     setOverrideReason('')
     closeCaseDrawer()
   }
   const handleAccept = () => {
     acceptCase(selectedCase.id)
-    showToast('Recommendation accepted', 'تجویز منظور ہو گئی', 'success')
+    showToast(t('recommendationAccepted', 'en'), t('recommendationAccepted', 'ur'), 'success')
   }
   const handleAssign = () => {
     assignVolunteer(selectedCase.id)
-    showToast(`Volunteer ${assignVol} assigned`, `رضاکار ${assignVol} مقرر ہو گیا`, 'success')
+    showToast(`${t('volunteerAssigned', 'en')} ${assignVol}`, `${t('volunteerAssigned', 'ur')} ${assignVol}`, 'success')
     setShowAssign(false)
   }
   const handleSendMessage = () => {
     if (!messageText.trim()) return
     addTimeline(selectedCase.id, `Message: "${messageText}"`)
-    showToast('Message sent', 'پیغام بھیج دیا گیا', 'success')
+    showToast(t('messageSent', 'en'), t('messageSent', 'ur'), 'success')
     setMessageText('')
     setShowSendMsg(false)
   }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore, type Role } from '../store'
+import { t } from '../i18n'
 
 interface RoleCard {
   name: string
@@ -46,7 +47,7 @@ export default function LoginPage() {
     setAuthUser(name)
     setTimeout(() => {
       login({ name, nameUrdu, email: emailAddr, phone: emailAddr, role, roleLabel })
-      showToast('Access Granted', 'خوش آمدید', 'success')
+      showToast(t('accessGranted', 'en'), t('accessGranted', 'ur'), 'success')
       setAuthenticating(false)
       setAuthUser(null)
       navigate(ROLE_HOMES[role])
@@ -81,7 +82,7 @@ export default function LoginPage() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75" />
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary" />
                 </span>
-                <span className="font-telemetry-sm text-telemetry-sm text-secondary tracking-widest uppercase">SINDH COMMAND MESH // MONSOON ALERT TIER-1</span>
+                <span className={`font-telemetry-sm text-telemetry-sm text-secondary tracking-widest uppercase ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('sindhCommand', language)}</span>
               </div>
               <div className="flex items-center gap-space-xs">
                 <a className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container/40 text-error hover:bg-error-container/60 transition-colors" href="tel:1129">
@@ -90,7 +91,7 @@ export default function LoginPage() {
                 </a>
                 <button onClick={() => setLanguage(language === 'en' ? 'ur' : 'en')} className="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-high hover:bg-surface-bright text-on-surface transition-all" type="button">
                   <span className="material-symbols-outlined text-[16px] text-primary">translate</span>
-                  <span className="font-body-sm text-body-sm font-semibold">{language === 'en' ? 'اردو (RTL)' : 'English (LTR)'}</span>
+                  <span className={`font-body-sm text-body-sm font-semibold ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t(language === 'en' ? 'urdu' : 'english', language)}</span>
                 </button>
               </div>
             </div>
@@ -115,14 +116,12 @@ export default function LoginPage() {
                   </svg>
                 </div>
               </div>
-              <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight mt-space-xs drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">Nobody Left Behind</h1>
+              <h1 className={`font-headline-lg text-headline-lg text-on-surface tracking-tight mt-space-xs drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] ${language === 'ur' ? 'font-urdu-headline' : ''}`}>{t('appName', language)}</h1>
               <div className="relative mt-1 mb-2">
-                <h2 className="font-urdu-headline text-urdu-headline text-primary font-bold tracking-normal leading-tight">کوئی پیچھے نہ رہے</h2>
                 <div className="w-32 h-[2px] mx-auto bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-60" />
               </div>
-              <p className="font-body-sm text-body-sm text-on-surface-variant max-w-md">
-                Sindh Emergency Flood &amp; Heatwave Response System<br />
-                <span className="font-urdu-body text-[13px]">حکومتِ سندھ ڈیزاسٹر مینجمنٹ پورٹل</span>
+              <p className={`font-body-sm text-body-sm text-on-surface-variant max-w-md ${language === 'ur' ? 'font-urdu-body' : ''}`}>
+                {language === 'en' ? 'Sindh Emergency Flood & Heatwave Response System' : t('sindhEmergency', 'ur')}
               </p>
             </div>
 
@@ -130,11 +129,11 @@ export default function LoginPage() {
             <form className="mt-space-lg flex flex-col gap-space-md" onSubmit={handleFormLogin}>
               <div className="flex flex-col gap-1 text-left rtl:text-right">
                 <div className="flex items-center justify-between">
-                  <label className="font-body-sm text-body-sm font-semibold text-on-surface flex items-center gap-1.5" htmlFor="officialId">
+                  <label className={`font-body-sm text-body-sm font-semibold text-on-surface flex items-center gap-1.5 ${language === 'ur' ? 'font-urdu-body' : ''}`} htmlFor="officialId">
                     <span className="material-symbols-outlined text-[16px] text-primary">badge</span>
-                    <span>Official ID / شناختی کوڈ</span>
+                    <span>{t('officialId', language)}</span>
                   </label>
-                  <span className="font-telemetry-sm text-telemetry-sm text-secondary">SECURE SSO</span>
+                  <span className="font-telemetry-sm text-telemetry-sm text-secondary">{t('secureSSO', language)}</span>
                 </div>
                 <div className="relative">
                   <input className="w-full bg-surface-container-lowest/80 text-on-surface rounded-lg p-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 font-telemetry-md text-telemetry-md placeholder-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary-container focus:bg-surface-container-low transition-all" id="officialId" placeholder="name@emergency.sindh.gov.pk" required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -143,11 +142,11 @@ export default function LoginPage() {
               </div>
               <div className="flex flex-col gap-1 text-left rtl:text-right">
                 <div className="flex items-center justify-between">
-                  <label className="font-body-sm text-body-sm font-semibold text-on-surface flex items-center gap-1.5" htmlFor="authToken">
+                  <label className={`font-body-sm text-body-sm font-semibold text-on-surface flex items-center gap-1.5 ${language === 'ur' ? 'font-urdu-body' : ''}`} htmlFor="authToken">
                     <span className="material-symbols-outlined text-[16px] text-primary">key</span>
-                    <span>Access Key / پاس ورڈ</span>
+                    <span>{t('authToken', language)}</span>
                   </label>
-                  <button className="font-telemetry-sm text-telemetry-sm text-primary hover:underline" type="button" onClick={() => showToast('Contact admin for help', 'ایڈمن سے رابطہ کریں', 'info')}>HELP / مدد</button>
+                  <button className={`font-telemetry-sm text-telemetry-sm text-primary hover:underline ${language === 'ur' ? 'font-urdu-body text-xs' : ''}`} type="button" onClick={() => showToast(t('contactAdmin', 'en'), t('contactAdmin', 'ur'), 'info')}>{t('help', language)}</button>
                 </div>
                 <div className="relative">
                   <input className="w-full bg-surface-container-lowest/80 text-on-surface rounded-lg p-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 font-telemetry-md text-telemetry-md placeholder-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary-container focus:bg-surface-container-low transition-all" id="authToken" required type={showPwd ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} />
@@ -160,12 +159,12 @@ export default function LoginPage() {
               <div className="flex items-center justify-between py-1">
                 <label className="flex items-center gap-2.5 cursor-pointer">
                   <input checked readOnly className="w-4 h-4 rounded bg-surface-container-high border-none text-primary-container focus:ring-0 accent-primary-container" type="checkbox" />
-                  <span className="font-body-sm text-body-sm text-on-surface-variant">Cache maps for offline mode / آف لائن موڈ محفوظ رکھیں</span>
+                  <span className={`font-body-sm text-body-sm text-on-surface-variant ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('cacheMapsOffline', language)}</span>
                 </label>
               </div>
-              <button className="w-full py-3.5 px-space-md rounded-lg bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-bold flex items-center justify-center gap-2 shadow-[0_10px_25px_rgba(242,169,59,0.35),inset_0_1px_0_rgba(255,255,255,0.3)] hover:brightness-110 active:translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed" type="submit" disabled={authenticating}>
+              <button className={`w-full py-3.5 px-space-md rounded-lg bg-primary-container text-on-primary-container font-headline-sm text-headline-sm font-bold flex items-center justify-center gap-2 shadow-[0_10px_25px_rgba(242,169,59,0.35),inset_0_1px_0_rgba(255,255,255,0.3)] hover:brightness-110 active:translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed ${language === 'ur' ? 'font-urdu-headline' : ''}`} type="submit" disabled={authenticating}>
                 <span className="material-symbols-outlined font-bold">{authenticating ? <span className="animate-spin">sync</span> : 'radar'}</span>
-                <span>{authenticating ? 'Authenticating Mesh... / تصدیق جاری ہے' : 'Sign In to Command Center / کمانڈ سینٹر میں داخل ہوں'}</span>
+                <span>{t(authenticating ? 'authenticating' : 'signInCommand', language)}</span>
               </button>
             </form>
           </section>
@@ -175,23 +174,23 @@ export default function LoginPage() {
             <div className="flex items-center justify-between px-1">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-secondary text-[18px]">verified_user</span>
-                <h3 className="font-body-sm text-body-sm uppercase tracking-widest text-on-surface-variant font-bold">Demo Operational Roles / فوری ڈیمو رول کا انتخاب</h3>
+                <h3 className={`font-body-sm text-body-sm uppercase tracking-widest text-on-surface-variant font-bold ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('demoRoles', language)}</h3>
               </div>
-              <span className="font-telemetry-sm text-telemetry-sm text-primary">SELECT TO AUTORUN</span>
+              <span className="font-telemetry-sm text-telemetry-sm text-primary">{t('selectAutorun', language)}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-xs">
               {ROLE_CARDS.map((card) => (
                 <button key={card.email} className={`${card.fullSpan ? 'sm:col-span-2' : ''} group text-left rtl:text-right p-3.5 rounded-lg bg-surface-container/60 hover:bg-surface-container-high transition-all flex flex-col gap-1.5 shadow-sm active:scale-[0.99]`} onClick={() => selectRole(card)} type="button" disabled={authenticating}>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 font-headline-sm text-[16px] font-bold">
+                    <div className={`flex items-center gap-2 font-headline-sm text-[16px] font-bold ${language === 'ur' ? 'font-urdu-headline' : ''}`}>
                       <span className={`material-symbols-outlined text-[18px] ${card.iconColor} group-hover:rotate-12 transition-transform`}>{card.icon}</span>
-                      <span className={card.iconColor}>{card.roleLabel}</span>
+                      <span className={card.iconColor}>{card.roleLabel.split(' / ')[language === 'en' ? 0 : 1]}</span>
                     </div>
                     <span className={`font-telemetry-sm text-telemetry-sm ${card.badgeColor} px-2 py-0.5 rounded-full`}>{card.badge}</span>
                   </div>
                   <p className="font-body-sm text-body-sm text-on-surface-variant leading-snug">{card.desc}</p>
                   {authenticating && authUser === card.name && (
-                    <p className="font-telemetry-sm text-telemetry-sm text-primary animate-pulse">→ Logging in...</p>
+                    <p className={`font-telemetry-sm text-telemetry-sm text-primary animate-pulse ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('loggingIn', language)}</p>
                   )}
                 </button>
               ))}
@@ -199,9 +198,8 @@ export default function LoginPage() {
           </section>
 
           <footer className="mt-space-lg pt-space-md text-center">
-            <p className="font-body-sm text-body-sm text-on-surface-variant/75 flex items-center justify-center gap-1.5 leading-relaxed">
-              <span>⚡ Synthetic demo data, weights are expert assumptions, not validated /</span>
-              <span className="font-urdu-body text-[14px]">مصنوعی ڈیمو ڈیٹا، ترجیحی وزن ماہرین کے فرضی تخمینے پر مبنی ہیں</span>
+            <p className={`font-body-sm text-body-sm text-on-surface-variant/75 flex items-center justify-center gap-1.5 leading-relaxed ${language === 'ur' ? 'font-urdu-body' : ''}`}>
+              <span>{t('syntheticDataFull', language)}</span>
             </p>
           </footer>
         </div>

@@ -27,7 +27,7 @@ export default function CommandPage() {
 
   const handleRecenter = () => {
     setZoomLevel(1)
-    showToast('Map recentered', 'نقشہ دوبارہ مرکزی ہو گیا', 'info')
+    showToast(t('mapRecentered', 'en'), t('mapRecentered', 'ur'), 'info')
   }
 
   const filteredCases = selectedArea

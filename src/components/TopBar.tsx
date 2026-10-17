@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useStore } from '../store'
+import { t } from '../i18n'
 import Modal from './Modal'
 
 function fmtCountdown(sec: number): string {
@@ -39,7 +40,7 @@ export default function TopBar() {
 
   const handleSave = () => {
     updateUser({ name: editName, phone: editPhone, roleLabel: editRoleLabel })
-    showToast('Profile updated', 'پروفائل اپڈیٹ ہو گئی', 'success')
+    showToast(t('profileUpdated', 'en'), t('profileUpdated', 'ur'), 'success')
     setShowEdit(false)
   }
 
@@ -51,11 +52,9 @@ export default function TopBar() {
           <aside className="h-6 px-margin flex items-center justify-between bg-surface-container-high/90 text-on-surface-variant font-telemetry-sm text-telemetry-sm select-none">
             <div className="flex items-center gap-space-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse" />
-              <span className="tracking-wider uppercase">Synthetic demo data</span>
-              <span className="opacity-40">/</span>
-              <span className="font-urdu-body text-[11px] leading-tight">مصنوعی ڈیمو ڈیٹا</span>
+              <span className={`tracking-wider uppercase ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('syntheticData', language)}</span>
             </div>
-            <span className="font-telemetry-sm text-[11px] text-secondary">MONSOON-SYS 2.4</span>
+            <span className="font-telemetry-sm text-[11px] text-secondary">{t('systemVersion', language)}</span>
           </aside>
           <div className="h-24 px-margin flex flex-col justify-center gap-1.5">
             <div className="flex items-center justify-between gap-space-sm">
@@ -69,11 +68,9 @@ export default function TopBar() {
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface-container-lowest" />
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <h1 className="font-headline-sm text-headline-sm text-on-surface truncate leading-tight tracking-tight">Nobody Left Behind</h1>
+                  <h1 className={`font-headline-sm text-headline-sm text-on-surface truncate leading-tight tracking-tight ${language === 'ur' ? 'font-urdu-headline' : ''}`}>{t('appName', language)}</h1>
                   <div className="flex items-center gap-1.5 text-on-surface-variant">
-                    <span className="font-body-sm text-body-sm text-primary font-medium truncate">{user?.roleLabel.split(' / ')[0]}</span>
-                    <span className="opacity-40 text-xs">•</span>
-                    <span className="font-urdu-body text-xs text-primary truncate">{user?.roleLabel.split(' / ')[1]}</span>
+                    <span className={`font-body-sm text-body-sm text-primary font-medium truncate ${language === 'ur' ? 'font-urdu-body' : ''}`}>{user?.roleLabel.split(' / ')[language === 'en' ? 0 : 1]}</span>
                   </div>
                 </div>
               </div>
@@ -94,37 +91,35 @@ export default function TopBar() {
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-low/90">
                 <span className="material-symbols-outlined text-secondary text-[14px]">water_drop</span>
-                <span className="font-telemetry-sm text-telemetry-sm text-on-surface-variant">Water in</span>
+                <span className={`font-telemetry-sm text-telemetry-sm text-on-surface-variant ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('waterIn', language)}</span>
                 <span className="font-telemetry-sm text-telemetry-sm text-primary font-bold tracking-tight">{fmtCountdown(hazardCountdown)}</span>
               </div>
               <button onClick={() => useStore.getState().toggleOnline()} className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-low/90">
                 <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-secondary-container animate-pulse' : 'bg-error'}`} />
-                <span className="font-telemetry-sm text-[11px] text-secondary font-medium">{isOnline ? 'Online' : 'Offline'}</span>
-                <span className="opacity-40 text-[10px]">/</span>
-                <span className="font-urdu-body text-[11px] text-secondary leading-none">{isOnline ? 'آن لائن' : 'آف لائن'}</span>
+                <span className={`font-telemetry-sm text-[11px] text-secondary font-medium ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t(isOnline ? 'online' : 'offline', language)}</span>
               </button>
             </div>
           </div>
         </header>
 
         {/* Edit Profile Modal */}
-        <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title="Edit Profile" titleUrdu="پروفائل میں ترمیم">
+        <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title={t('editProfile', 'en')} titleUrdu={t('editProfile', 'ur')}>
           <div className="flex flex-col gap-space-md">
             <div>
-              <label className="block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs">Name / نام</label>
+              <label className={`block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('name', language)}</label>
               <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-space-sm py-2 bg-surface-container rounded-lg text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary-container" />
             </div>
             <div>
-              <label className="block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs">Phone / فون</label>
+              <label className={`block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('phone', language)}</label>
               <input type="text" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="w-full px-space-sm py-2 bg-surface-container rounded-lg text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary-container" />
             </div>
             <div>
-              <label className="block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs">Role Label / کردار</label>
+              <label className={`block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('role', language)}</label>
               <input type="text" value={editRoleLabel} onChange={(e) => setEditRoleLabel(e.target.value)} className="w-full px-space-sm py-2 bg-surface-container rounded-lg text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary-container" />
             </div>
             <div className="flex justify-end gap-space-sm mt-space-md">
-              <button onClick={() => setShowEdit(false)} className="px-space-md py-2 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-body-sm text-body-sm font-semibold transition-all" type="button">Cancel / منسوخ</button>
-              <button onClick={handleSave} className="px-space-md py-2 rounded-lg bg-primary-container text-on-primary-container font-body-sm text-body-sm font-semibold transition-all" type="button">Save / محفوظ کریں</button>
+              <button onClick={() => setShowEdit(false)} className={`px-space-md py-2 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-body-sm text-body-sm font-semibold transition-all ${language === 'ur' ? 'font-urdu-body' : ''}`} type="button">{t('cancel', language)}</button>
+              <button onClick={handleSave} className={`px-space-md py-2 rounded-lg bg-primary-container text-on-primary-container font-body-sm text-body-sm font-semibold transition-all ${language === 'ur' ? 'font-urdu-body' : ''}`} type="button">{t('save', language)}</button>
             </div>
           </div>
         </Modal>
@@ -138,9 +133,7 @@ export default function TopBar() {
       <header className="fixed top-0 left-0 lg:left-64 right-0 z-40 bg-surface-container-low/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.3)] rtl:left-auto rtl:right-0 rtl:lg:left-0 rtl:lg:right-64">
         <div className="w-full px-space-md py-space-xs bg-surface-container-lowest/80 flex items-center justify-center gap-space-sm font-telemetry-sm text-telemetry-sm text-primary">
           <span className="material-symbols-outlined text-telemetry-md">bolt</span>
-          <span className="tracking-wide">Synthetic demo data, weights are expert assumptions, not validated</span>
-          <span className="text-outline-variant">|</span>
-          <span className="font-urdu-body text-telemetry-sm">مصنوعی ڈیمو ڈیٹا، ماہرین کے فرضی تخمینے پر مبنی</span>
+          <span className={`tracking-wide ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('syntheticDataFull', language)}</span>
         </div>
         <div className="h-16 w-full px-space-lg flex items-center justify-between gap-space-md">
           <div className="flex items-center gap-space-md">
@@ -153,16 +146,13 @@ export default function TopBar() {
                 </svg>
               </div>
               <div className="flex flex-col leading-none">
-                <span className="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">Nobody Left Behind</span>
-                <span className="font-urdu-headline text-body-sm text-primary-container font-semibold -mt-1">کوئی پیچھے نہ رہے</span>
+                <span className={`font-headline-sm text-headline-sm text-primary font-bold tracking-tight ${language === 'ur' ? 'font-urdu-headline' : ''}`}>{t('appName', language)}</span>
               </div>
             </div>
             {user && (
-              <div className="hidden xl:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-secondary-container/20 text-secondary font-headline-sm text-telemetry-sm">
+              <div className={`hidden xl:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-secondary-container/20 text-secondary font-headline-sm text-telemetry-sm ${language === 'ur' ? 'font-urdu-body' : ''}`}>
                 <span className="material-symbols-outlined text-telemetry-md">shield_person</span>
-                <span>{user.roleLabel.split(' / ')[0]}</span>
-                <span className="text-secondary/60">/</span>
-                <span className="font-urdu-body text-telemetry-sm">{user.roleLabel.split(' / ')[1]}</span>
+                <span>{user.roleLabel.split(' / ')[language === 'en' ? 0 : 1]}</span>
               </div>
             )}
             <div className="flex items-center gap-space-sm px-space-sm py-1 rounded-full bg-error-container/25 text-error shadow-[0_0_12px_rgba(229,83,61,0.2)]">
@@ -170,9 +160,7 @@ export default function TopBar() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-error" />
               </span>
-              <span className="font-telemetry-sm text-telemetry-sm font-semibold tracking-wide">⚠️ Water arrives in {fmtCountdown(hazardCountdown)}</span>
-              <span className="text-error/60">/</span>
-              <span className="font-urdu-body text-telemetry-sm text-error">پانی پہنچنے میں {fmtCountdown(hazardCountdown)}</span>
+              <span className={`font-telemetry-sm text-telemetry-sm font-semibold tracking-wide ${language === 'ur' ? 'font-urdu-body' : ''}`}>⚠️ {t('waterArrives', language)} {fmtCountdown(hazardCountdown)}</span>
             </div>
           </div>
           <div className="flex items-center gap-space-sm">
@@ -183,11 +171,9 @@ export default function TopBar() {
             <button onClick={toggleTheme} className="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" title="Toggle Theme" type="button">
               <span className="material-symbols-outlined text-headline-sm">{theme === 'dark' ? 'dark_mode' : 'light_mode'}</span>
             </button>
-            <button onClick={() => useStore.getState().toggleOnline()} className="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-telemetry-sm text-telemetry-sm transition-colors hover:bg-surface-container-high" type="button">
+            <button onClick={() => useStore.getState().toggleOnline()} className={`flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-telemetry-sm text-telemetry-sm transition-colors hover:bg-surface-container-high ${language === 'ur' ? 'font-urdu-body' : ''}`} type="button">
               <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-secondary' : 'bg-error animate-pulse'}`} />
-              <span>{isOnline ? 'Online' : 'Offline'}</span>
-              <span className="text-outline-variant">/</span>
-              <span className="font-urdu-body text-telemetry-sm">{isOnline ? 'آن لائن' : 'آف لائن'}</span>
+              <span>{t(isOnline ? 'online' : 'offline', language)}</span>
             </button>
             <div className="relative" ref={notifRef}>
               <button onClick={() => setShowNotifs(!showNotifs)} className="relative w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" type="button">
@@ -197,7 +183,7 @@ export default function TopBar() {
               {showNotifs && (
                 <div className="absolute right-0 top-full mt-1 w-80 bg-surface-container-low rounded-lg shadow-xl z-50 overflow-hidden">
                   <div className="flex items-center justify-between p-space-sm border-b border-surface-variant/30">
-                    <span className="font-headline-sm text-body-sm font-bold text-on-surface">Notifications / اطلاع</span>
+                    <span className={`font-headline-sm text-body-sm font-bold text-on-surface ${language === 'ur' ? 'font-urdu-headline' : ''}`}>{t('notifications', language)}</span>
                     <button onClick={() => { markAllNotificationsRead(); showToast('All notifications marked read', 'تمام اطلاعات پڑھ گئے', 'success') }} className="font-telemetry-sm text-telemetry-sm text-primary hover:underline" type="button">Mark all read</button>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
@@ -216,8 +202,7 @@ export default function TopBar() {
             <div className="relative" ref={profileRef}>
               <div className="flex items-center gap-space-sm pl-space-xs ml-space-xs cursor-pointer" onClick={() => setShowProfile(!showProfile)}>
                 <div className="flex flex-col text-right leading-tight hidden md:flex">
-                  <span className="font-headline-sm text-body-sm font-semibold text-on-surface">{user?.name}</span>
-                  <span className="font-urdu-body text-telemetry-sm text-on-surface-variant">{user?.nameUrdu}</span>
+                  <span className="font-headline-sm text-body-sm font-semibold text-on-surface">{language === 'en' ? user?.name : user?.nameUrdu}</span>
                 </div>
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold ring-1 ring-primary/40">
                   {user?.name.charAt(0)}
@@ -230,13 +215,13 @@ export default function TopBar() {
                     <p className="font-body-sm text-sm text-on-surface-variant">{user?.roleLabel}</p>
                     <p className="font-telemetry-sm text-telemetry-sm text-on-surface-variant mt-1">{user?.email}</p>
                   </div>
-                  <button onClick={() => { setShowProfile(false); setEditName(user?.name || ''); setEditPhone(user?.phone || ''); setEditRoleLabel(user?.roleLabel || ''); setShowEdit(true) }} className="w-full px-space-sm py-2 text-left font-body-sm text-body-sm text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-2" type="button">
+                  <button onClick={() => { setShowProfile(false); setEditName(user?.name || ''); setEditPhone(user?.phone || ''); setEditRoleLabel(user?.roleLabel || ''); setShowEdit(true) }} className={`w-full px-space-sm py-2 text-left font-body-sm text-body-sm text-on-surface hover:bg-surface-container-high transition-colors flex items-center gap-2 ${language === 'ur' ? 'font-urdu-body' : ''}`} type="button">
                     <span className="material-symbols-outlined text-[18px]">edit</span>
-                    Edit profile / پروفائل میں ترمیم
+                    {t('editProfile', language)}
                   </button>
-                  <button onClick={() => { setShowProfile(false); logout() }} className="w-full px-space-sm py-2 text-left font-body-sm text-body-sm text-error hover:bg-error-container/20 transition-colors flex items-center gap-2" type="button">
+                  <button onClick={() => { setShowProfile(false); logout() }} className={`w-full px-space-sm py-2 text-left font-body-sm text-body-sm text-error hover:bg-error-container/20 transition-colors flex items-center gap-2 ${language === 'ur' ? 'font-urdu-body' : ''}`} type="button">
                     <span className="material-symbols-outlined text-[18px]">logout</span>
-                    Logout / لاگ آؤٹ
+                    {t('logout', language)}
                   </button>
                 </div>
               )}
@@ -246,23 +231,23 @@ export default function TopBar() {
       </header>
 
       {/* Edit Profile Modal */}
-      <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title="Edit Profile" titleUrdu="پروفائل میں ترمیم">
+      <Modal isOpen={showEdit} onClose={() => setShowEdit(false)} title={t('editProfile', 'en')} titleUrdu={t('editProfile', 'ur')}>
         <div className="flex flex-col gap-space-md">
           <div>
-            <label className="block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs">Name / نام</label>
+            <label className={`block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('name', language)}</label>
             <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full px-space-sm py-2 bg-surface-container rounded-lg text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary-container" />
           </div>
           <div>
-            <label className="block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs">Phone / فون</label>
+            <label className={`block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('phone', language)}</label>
             <input type="text" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} className="w-full px-space-sm py-2 bg-surface-container rounded-lg text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary-container" />
           </div>
           <div>
-            <label className="block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs">Role Label / کردار</label>
+            <label className={`block font-body-sm text-body-sm font-semibold text-on-surface mb-space-xs ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('role', language)}</label>
             <input type="text" value={editRoleLabel} onChange={(e) => setEditRoleLabel(e.target.value)} className="w-full px-space-sm py-2 bg-surface-container rounded-lg text-body-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary-container" />
           </div>
           <div className="flex justify-end gap-space-sm mt-space-md">
-            <button onClick={() => setShowEdit(false)} className="px-space-md py-2 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-body-sm text-body-sm font-semibold transition-all" type="button">Cancel / منسوخ</button>
-            <button onClick={handleSave} className="px-space-md py-2 rounded-lg bg-primary-container text-on-primary-container font-body-sm text-body-sm font-semibold transition-all" type="button">Save / محفوظ کریں</button>
+            <button onClick={() => setShowEdit(false)} className={`px-space-md py-2 rounded-lg bg-surface-container-high hover:bg-surface-bright text-on-surface font-body-sm text-body-sm font-semibold transition-all ${language === 'ur' ? 'font-urdu-body' : ''}`} type="button">{t('cancel', language)}</button>
+            <button onClick={handleSave} className={`px-space-md py-2 rounded-lg bg-primary-container text-on-primary-container font-body-sm text-body-sm font-semibold transition-all ${language === 'ur' ? 'font-urdu-body' : ''}`} type="button">{t('save', language)}</button>
           </div>
         </div>
       </Modal>
