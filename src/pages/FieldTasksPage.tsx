@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { usePageInteractions } from '../lib/interactions'
+import LiveBoard from '../components/LiveBoard'
 
 export default function FieldTasksPage() {
   const nav = useNavigate()
@@ -7,6 +8,7 @@ export default function FieldTasksPage() {
   return (
     <div className={"bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen"} {...bind}>
       <div className={"flex flex-col relative w-full bg-surface"}><div className={"flex flex-col w-full px-margin space-y-space-md"}>
+      <LiveBoard variant="field" />
       {/*  1. Volunteer Identity & Operational Telemetry Pill  */}
       <section className={"flex flex-col gap-space-sm"}>
       <div className={"flex items-center justify-between gap-space-sm bg-surface-container-high/70 backdrop-blur-md rounded-xl p-3 shadow-md"}>

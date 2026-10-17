@@ -8,6 +8,11 @@ export default function CommandPage() {
   const { language, cases, openCaseDrawer, showToast } = useStore()
   const [selectedArea, setSelectedArea] = useState<string | null>(null)
   const [zoomLevel, setZoomLevel] = useState(1)
+  const tracked = cases.length
+  const t1 = cases.filter((c) => c.tier === 1).length
+  const t2 = cases.filter((c) => c.tier === 2).length
+  const t3 = cases.filter((c) => c.tier === 3).length
+  const unknownN = cases.filter((c) => c.unknown).length
 
   const handleOpenCase = (caseId: string) => {
     openCaseDrawer(caseId)
@@ -68,7 +73,7 @@ export default function CommandPage() {
                 <span className="material-symbols-outlined text-telemetry-sm text-on-surface-variant">groups</span>
               </div>
               <div className="mt-1 flex items-baseline gap-space-xs">
-                <span className="font-telemetry-lg text-telemetry-lg text-on-surface font-bold">1,842</span>
+                <span className="font-telemetry-lg text-telemetry-lg text-on-surface font-bold">{tracked.toLocaleString()}</span>
                 <span className="font-urdu-body text-telemetry-sm text-on-surface-variant">شہری</span>
               </div>
               <span className="font-body-sm text-on-surface-variant/75 text-[11px] truncate">Lyari, Malir, Korangi</span>
@@ -82,7 +87,7 @@ export default function CommandPage() {
                 <span className="font-urdu-body text-telemetry-sm text-error">خطرہ جاں</span>
               </div>
               <div className="mt-1 flex items-baseline gap-1">
-                <span className="font-telemetry-lg text-telemetry-lg text-error font-extrabold">14</span>
+                <span className="font-telemetry-lg text-telemetry-lg text-error font-extrabold">{t1}</span>
                 <span className="font-telemetry-sm text-telemetry-sm text-error/80">Immediate</span>
               </div>
               <div className="w-full bg-surface-container-lowest h-1 rounded-full overflow-hidden mt-1">
@@ -96,7 +101,7 @@ export default function CommandPage() {
                 <span className="font-urdu-body text-telemetry-sm text-primary">فوری</span>
               </div>
               <div className="mt-1 flex items-baseline gap-1">
-                <span className="font-telemetry-lg text-telemetry-lg text-primary font-bold">48</span>
+                <span className="font-telemetry-lg text-telemetry-lg text-primary font-bold">{t2}</span>
                 <span className="font-telemetry-sm text-telemetry-sm text-on-surface-variant">Cases</span>
               </div>
               <div className="w-full bg-surface-container-lowest h-1 rounded-full overflow-hidden mt-1">
@@ -110,7 +115,7 @@ export default function CommandPage() {
                 <span className="font-urdu-body text-telemetry-sm text-secondary">نگرانی</span>
               </div>
               <div className="mt-1 flex items-baseline gap-1">
-                <span className="font-telemetry-lg text-telemetry-lg text-secondary font-bold">112</span>
+                <span className="font-telemetry-lg text-telemetry-lg text-secondary font-bold">{t3}</span>
                 <span className="font-telemetry-sm text-telemetry-sm text-on-surface-variant">Stable</span>
               </div>
               <div className="w-full bg-surface-container-lowest h-1 rounded-full overflow-hidden mt-1">
@@ -127,7 +132,7 @@ export default function CommandPage() {
                 <span className="font-urdu-body text-telemetry-sm text-outline">نامعلوم</span>
               </div>
               <div className="mt-1 flex items-baseline gap-1">
-                <span className="font-telemetry-lg text-telemetry-lg text-on-surface font-bold">29</span>
+                <span className="font-telemetry-lg text-telemetry-lg text-on-surface font-bold">{unknownN}</span>
                 <span className="font-telemetry-sm text-telemetry-sm text-error/90 font-medium tracking-tight">Zero-Ping</span>
               </div>
               <span className="font-body-sm text-[11px] text-tertiary truncate">Default to High Exposure</span>
@@ -419,18 +424,18 @@ export default function CommandPage() {
               </div>
               {/* Tier Filter Tabs with Counter Badges */}
               <div className="flex items-center justify-between gap-1 overflow-x-auto py-1">
-                <button className="px-space-sm py-1 rounded-lg text-body-sm font-medium bg-surface-container-high text-on-surface">All (203)</button>
+                <button className="px-space-sm py-1 rounded-lg text-body-sm font-medium bg-surface-container-high text-on-surface">All ({tracked})</button>
                 <button className="px-space-sm py-1 rounded-lg text-body-sm font-semibold bg-error-container/30 text-error flex items-center gap-1">
                   <span>Tier 1</span>
-                  <span className="px-1.5 py-0.2 rounded-full bg-error text-on-error text-telemetry-sm font-bold">14</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-error text-on-error text-telemetry-sm font-bold">{t1}</span>
                 </button>
                 <button className="px-space-sm py-1 rounded-lg text-body-sm font-medium text-primary hover:bg-surface-container flex items-center gap-1">
                   <span>Tier 2</span>
-                  <span className="text-telemetry-sm text-primary/80">48</span>
+                  <span className="text-telemetry-sm text-primary/80">{t2}</span>
                 </button>
                 <button className="px-space-sm py-1 rounded-lg text-body-sm font-medium text-outline hover:bg-surface-container flex items-center gap-1">
                   <span>Unknown</span>
-                  <span className="text-telemetry-sm text-outline">29</span>
+                  <span className="text-telemetry-sm text-outline">{unknownN}</span>
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { usePageInteractions } from '../lib/interactions'
+import LiveBoard from '../components/LiveBoard'
 
 export default function ShelterPage() {
   const nav = useNavigate()
@@ -7,6 +8,7 @@ export default function ShelterPage() {
   return (
     <div className={"bg-surface text-on-surface font-body-md text-body-md antialiased selection:bg-primary-container selection:text-on-primary-container flex flex-col min-h-screen"} {...bind}>
       <div className={"flex flex-col relative w-full px-margin pt-28 pb-28 bg-surface"}><div className={"flex flex-col w-full gap-space-md text-on-surface"}>
+      <LiveBoard variant="shelter" />
       {/*  Facility Hero Status Card  */}
       <div className={"relative w-full rounded-xl bg-surface-container-high p-space-md overflow-hidden shadow-[0_12px_32px_rgba(0,0,0,0.45)]"}>
       <div className={"absolute -right-16 -top-16 w-44 h-44 rounded-full bg-primary/10 blur-3xl pointer-events-none"}></div>

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { usePageInteractions } from '../lib/interactions'
+import LiveBoard from '../components/LiveBoard'
 
 export default function BuddyPage() {
   const nav = useNavigate()
@@ -7,6 +8,7 @@ export default function BuddyPage() {
   return (
     <div className={"bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen"} {...bind}>
       <div className={"flex flex-col relative w-full bg-surface"}><div className={"flex flex-col w-full px-margin space-y-space-md"}>
+      <LiveBoard variant="buddy" />
       {/*  Overview & Atmospheric Lantern Banner  */}
       <div className={"relative overflow-hidden rounded-xl bg-surface-container-high p-space-md shadow-xl"}>
       <div className={"absolute -top-10 -right-10 w-36 h-36 rounded-full bg-primary/10 blur-2xl pointer-events-none"}></div>

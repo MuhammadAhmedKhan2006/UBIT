@@ -75,6 +75,7 @@ export default function LandingPage() {
   const lang = useStore((s) => s.language)
   const setLanguage = useStore((s) => s.setLanguage)
   const user = useStore((s) => s.user)
+  const liveShelters = useStore((s) => s.communityShelters)
   const ur = lang === 'ur'
   const L = (b: Bi) => b[lang]
   const n = (v: string | number) => (ur ? String(v).replace(/\d/g, (d) => DIG[Number(d)]) : String(v))
@@ -84,7 +85,8 @@ export default function LandingPage() {
   const h = ur ? 'font-urdu-headline !leading-[1.8]' : 'font-headline-lg tracking-tight'
   const wrap = 'mx-auto w-full max-w-[1180px] px-margin lg:px-space-lg'
   const eyebrow = `text-[13px] text-on-surface-variant ${ur ? 'font-urdu-body' : 'uppercase tracking-[0.18em] font-telemetry-sm'}`
-  const shelters = INITIAL_COMMUNITY_SHELTERS.filter((s) => s.verified).slice(0, 3)
+  const source = liveShelters.length ? liveShelters : INITIAL_COMMUNITY_SHELTERS
+  const shelters = source.filter((s) => s.verified).slice(0, 3)
 
   return (
     <div className="min-h-screen bg-background text-on-surface font-body-md">

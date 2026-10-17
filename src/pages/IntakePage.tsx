@@ -1,11 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { usePageInteractions } from '../lib/interactions'
+import LiveBoard from '../components/LiveBoard'
 
 export default function IntakePage() {
   const nav = useNavigate()
   const bind = usePageInteractions("IntakePage", nav)
   return (
     <div className={"bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"} {...bind}>
+      <LiveBoard variant="intake" />
 {/*  Top Intake Telemetry Header  */}
       <section className={"flex flex-col gap-space-md"}>
       <div className={"flex flex-col xl:flex-row xl:items-end justify-between gap-space-md pb-space-xs"}>

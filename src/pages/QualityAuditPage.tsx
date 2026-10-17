@@ -1,11 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { usePageInteractions } from '../lib/interactions'
+import LiveBoard from '../components/LiveBoard'
 
 export default function QualityAuditPage() {
   const nav = useNavigate()
   const bind = usePageInteractions("QualityAuditPage", nav)
   return (
     <div className={"bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"} {...bind}>
+      <LiveBoard variant="audit" />
 {/*  Interactive & State Logic Scripts  */}
 
       {/*  Sub-Navigation Bar  */}

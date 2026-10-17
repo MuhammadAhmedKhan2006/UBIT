@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { INITIAL_COMMUNITY_SHELTERS, type CommunityShelter } from '../data/communityShelters'
+import type { BuddyHousehold, FieldTask, OfficialShelter, Snapshot } from '../lib/db'
+import * as db from '../lib/db'
 
 export type Role = 'coordinator' | 'volunteer' | 'registrar' | 'shelter' | 'viewer'
 export type Language = 'en' | 'ur'
@@ -113,6 +115,11 @@ interface AppState {
   playback: { playing: boolean; progress: number }
   registrations: { id: string; name: string; age: number; area: string; time: string }[]
   communityShelters: CommunityShelter[]
+  officialShelter: OfficialShelter | null
+  buddyHouseholds: BuddyHousehold[]
+  fieldTasks: FieldTask[]
+  authUserId: string | null
+  dbReady: boolean
   resident: {
     name: string
     phone: string
@@ -163,6 +170,8 @@ interface AppState {
   setHazardCountdown: (sec: number) => void
   seedCases: (cases: Case[]) => void
   resetDemo: () => void
+  applySnapshot: (snap: Snapshot) => void
+  setAuthUserId: (id: string | null) => void
 }
 
 const INITIAL_CASES: Case[] = [
@@ -230,13 +239,32 @@ export const useStore = create<AppState>()(
       playback: { playing: false, progress: 0 },
       registrations: [],
       communityShelters: INITIAL_COMMUNITY_SHELTERS,
+      officialShelter: null,
+      buddyHouseholds: [],
+      fieldTasks: [],
+      authUserId: null,
+      dbReady: false,
       navOpen: false,
       setNavOpen: (open) => set({ navOpen: open }),
       resident: { name: 'Rashid Ali', phone: '+92 300 8492011', phoneType: 'basic', language: 'ur', flags: ['Elderly household'] },
 
       login: (user) => set({ user: { ...user, phone: user.phone || user.email } }),
-      logout: () => set({ user: null }),
-      updateUser: (partial) => set((s) => ({ user: s.user ? { ...s.user, ...partial } : null })),
+      logout: () => {
+        void db.signOut()
+        set({ user: null, authUserId: null })
+      },
+      updateUser: (partial) => {
+        set((s) => ({ user: s.user ? { ...s.user, ...partial } : null }))
+        const id = get().authUserId
+        if (id) {
+          const patch: Record<string, unknown> = {}
+          if (partial.name) patch.name = partial.name
+          if (partial.nameUrdu) patch.name_urdu = partial.nameUrdu
+          if (partial.phone) patch.phone = partial.phone
+          if (partial.roleLabel) patch.role_label = partial.roleLabel
+          void db.updateProfile(id, patch)
+        }
+      },
       setLanguage: (lang) => {
         set({ language: lang })
         document.documentElement.setAttribute('dir', lang === 'ur' ? 'rtl' : 'ltr')
@@ -256,82 +284,183 @@ export const useStore = create<AppState>()(
         setTimeout(() => get().hideToast(), 2800)
       },
       hideToast: () => set((s) => ({ toast: { ...s.toast, visible: false } })),
-      markCaseSafe: (id) => set((s) => ({
-        cases: s.cases.map((c) => (c.id === id ? { ...c, status: 'safe' as const } : c)),
-      })),
-      dispatchCase: (id, asset) => set((s) => {
+      markCaseSafe: (id) => {
+        set((s) => ({ cases: s.cases.map((c) => (c.id === id ? { ...c, status: 'safe' as const } : c)) }))
+        void db.updateCase(id, { status: 'safe' })
+      },
+      dispatchCase: (id, asset) => {
+        const s = get()
         const c = s.cases.find((x) => x.id === id)
         const newAssignment: Assignment = { id: `asg-${Date.now()}`, caseId: id, caseName: c?.name || id, asset: asset || 'boat', assetLabel: asset === 'ambulance' ? 'Ambulance' : asset === 'team' ? 'Scout Team' : 'Boat Unit', status: 'dispatched', pinned: false, etaMin: Math.floor(Math.random() * 15 + 8) }
-        return {
+        set({
           cases: s.cases.map((x) => (x.id === id ? { ...x, status: 'dispatched' as const } : x)),
           assignments: [newAssignment, ...s.assignments],
           auditLog: [{ id: `a${Date.now()}`, action: 'Case dispatched for rescue', user: s.user?.name || 'System', caseId: id, timestamp: new Date().toISOString(), type: 'dispatch' as const }, ...s.auditLog],
           timeline: [{ id: `t${Date.now()}`, caseId: id, text: 'Rescue team dispatched', at: new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) }, ...s.timeline],
-        }
-      }),
-      acceptCase: (id) => set((s) => ({
-        cases: s.cases.map((c) => (c.id === id ? { ...c, status: 'accepted' as const } : c)),
-        auditLog: [{ id: `a${Date.now()}`, action: 'Recommendation accepted', user: s.user?.name || 'System', caseId: id, timestamp: new Date().toISOString(), type: 'accept' as const }, ...s.auditLog],
-      })),
-      assignVolunteer: (id) => set((s) => ({
-        auditLog: [{ id: `a${Date.now()}`, action: 'Volunteer assigned to case', user: s.user?.name || 'System', caseId: id, timestamp: new Date().toISOString(), type: 'assign' as const }, ...s.auditLog],
-        timeline: [{ id: `t${Date.now()}`, caseId: id, text: 'Volunteer assigned (Squad 04)', at: new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) }, ...s.timeline],
-      })),
-      addCase: (c) => set((s) => ({ cases: [c, ...s.cases] })),
-      advanceAlertLevel: () => set((s) => {
+        })
+        void db.updateCase(id, { status: 'dispatched' })
+        void db.insertAssignment(newAssignment)
+        void db.insertAudit({ action: 'Case dispatched for rescue', user: s.user?.name || 'System', caseId: id, type: 'dispatch', role: s.user?.role })
+        void db.insertTimeline(id, 'Rescue team dispatched', s.authUserId || undefined)
+      },
+      acceptCase: (id) => {
+        const s = get()
+        set({
+          cases: s.cases.map((c) => (c.id === id ? { ...c, status: 'accepted' as const } : c)),
+          auditLog: [{ id: `a${Date.now()}`, action: 'Recommendation accepted', user: s.user?.name || 'System', caseId: id, timestamp: new Date().toISOString(), type: 'accept' as const }, ...s.auditLog],
+        })
+        void db.updateCase(id, { status: 'accepted' })
+        void db.insertAudit({ action: 'Recommendation accepted', user: s.user?.name || 'System', caseId: id, type: 'accept', role: s.user?.role })
+      },
+      assignVolunteer: (id) => {
+        const s = get()
+        set({
+          auditLog: [{ id: `a${Date.now()}`, action: 'Volunteer assigned to case', user: s.user?.name || 'System', caseId: id, timestamp: new Date().toISOString(), type: 'assign' as const }, ...s.auditLog],
+          timeline: [{ id: `t${Date.now()}`, caseId: id, text: 'Volunteer assigned (Squad 04)', at: new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) }, ...s.timeline],
+        })
+        void db.insertAudit({ action: 'Volunteer assigned to case', user: s.user?.name || 'System', caseId: id, type: 'assign', role: s.user?.role })
+        void db.insertTimeline(id, 'Volunteer assigned (Squad 04)', s.authUserId || undefined)
+      },
+      addCase: (c) => {
+        set((s) => ({ cases: [c, ...s.cases] }))
+        void db.insertCase(c)
+      },
+      advanceAlertLevel: () => {
         const lv: AppState['alertLevel'][] = ['advisory', 'warning', 'evacuation']
-        return { alertLevel: lv[Math.min(lv.indexOf(s.alertLevel) + 1, 2)] }
-      }),
-      addAuditEntry: (entry) => set((s) => ({ auditLog: [{ ...entry, id: `a${Date.now()}`, timestamp: new Date().toISOString() }, ...s.auditLog] })),
-      addTimeline: (caseId, text) => set((s) => ({ timeline: [{ id: `t${Date.now()}`, caseId, text, at: new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) }, ...s.timeline] })),
-      pinAssignment: (id) => set((s) => ({ assignments: s.assignments.map((a) => a.id === id ? { ...a, pinned: !a.pinned } : a) })),
-      pinAllAssignments: () => set((s) => ({ assignments: s.assignments.map((a) => ({ ...a, pinned: true })) })),
-      approveAssignment: (id) => set((s) => ({ assignments: s.assignments.map((a) => a.id === id ? { ...a, status: 'approved' as const } : a) })),
-      approveAllAssignments: () => set((s) => ({ assignments: s.assignments.map((a) => ({ ...a, status: 'approved' as const })) })),
-      recomputeAssignments: () => set((s) => ({ assignments: [...s.assignments].sort((a, b) => Math.random() - 0.5).map((a) => ({ ...a, etaMin: Math.floor(Math.random() * 20 + 5) })) })),
+        const next = lv[Math.min(lv.indexOf(get().alertLevel) + 1, 2)]
+        set({ alertLevel: next })
+        void db.setConfig('alert_level', next)
+      },
+      addAuditEntry: (entry) => {
+        const row = { ...entry, id: `a${Date.now()}`, timestamp: new Date().toISOString() }
+        set((s) => ({ auditLog: [row, ...s.auditLog] }))
+        void db.insertAudit({ action: entry.action, user: entry.user, caseId: entry.caseId, type: entry.type, reason: entry.reason, role: get().user?.role })
+      },
+      addTimeline: (caseId, text) => {
+        set((s) => ({ timeline: [{ id: `t${Date.now()}`, caseId, text, at: new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) }, ...s.timeline] }))
+        void db.insertTimeline(caseId, text, get().authUserId || undefined)
+      },
+      pinAssignment: (id) => {
+        const cur = get().assignments.find((a) => a.id === id)
+        set((s) => ({ assignments: s.assignments.map((a) => a.id === id ? { ...a, pinned: !a.pinned } : a) }))
+        void db.updateAssignment(id, { pinned: !cur?.pinned })
+      },
+      pinAllAssignments: () => {
+        set((s) => ({ assignments: s.assignments.map((a) => ({ ...a, pinned: true })) }))
+        get().assignments.forEach((a) => void db.updateAssignment(a.id, { pinned: true }))
+      },
+      approveAssignment: (id) => {
+        set((s) => ({ assignments: s.assignments.map((a) => a.id === id ? { ...a, status: 'approved' as const } : a) }))
+        void db.updateAssignment(id, { status: 'approved', approved_at: new Date().toISOString() })
+      },
+      approveAllAssignments: () => {
+        set((s) => ({ assignments: s.assignments.map((a) => ({ ...a, status: 'approved' as const })) }))
+        get().assignments.forEach((a) => void db.updateAssignment(a.id, { status: 'approved' }))
+      },
+      recomputeAssignments: () => {
+        const next = [...get().assignments].sort((a, b) => Math.random() - 0.5).map((a) => ({ ...a, etaMin: Math.floor(Math.random() * 20 + 5) }))
+        set({ assignments: next })
+        next.forEach((a) => void db.updateAssignment(a.id, { eta_minutes: a.etaMin }))
+      },
       setDispatchView: (v) => set({ dispatchView: v }),
       setSelectedRoute: (v) => set({ selectedRoute: v }),
       setShowTidal: (v) => set({ showTidal: v }),
-      setSim: (partial) => set((s) => ({ sim: { ...s.sim, ...partial } })),
-      setResident: (partial) => set((s) => ({ resident: { ...s.resident, ...partial } })),
-      advanceIntake: () => set((s) => ({ intakeIndex: Math.min(s.intakeIndex + 1, s.intakeQueue.length - 1) })),
+      setSim: (partial) => {
+        const sim = { ...get().sim, ...partial }
+        set({ sim })
+        void db.setConfig('simulation_state', sim)
+      },
+      setResident: (partial) => {
+        const resident = { ...get().resident, ...partial }
+        set({ resident })
+        void db.setConfig('resident_sim', resident)
+      },
+      advanceIntake: () => {
+        const s = get()
+        const cur = s.intakeQueue[s.intakeIndex]
+        if (cur) void db.markIntakeProcessed(cur.id)
+        set({ intakeIndex: Math.min(s.intakeIndex + 1, s.intakeQueue.length - 1) })
+      },
       setPlayback: (partial) => set((s) => ({ playback: { ...s.playback, ...partial } })),
       syncOutbox: () => {
+        const queued = get().syncItems.filter((i) => i.status === 'queued')
         set((s) => ({ syncItems: s.syncItems.map((i) => i.status === 'queued' ? { ...i, status: 'syncing' as const, progress: 10 } : i) }))
+        queued.forEach((i) => void db.updateSyncItem(i.id, { status: 'syncing', progress: 10 }))
         setTimeout(() => {
           set((s) => ({ syncItems: s.syncItems.map((i) => i.status === 'syncing' ? { ...i, progress: 50 } : i) }))
         }, 800)
         setTimeout(() => {
+          const ids = get().syncItems.filter((i) => i.status === 'syncing').map((i) => i.id)
           set((s) => ({ syncItems: s.syncItems.map((i) => i.status === 'syncing' ? { ...i, status: 'synced' as const, progress: 100 } : i) }))
+          ids.forEach((id) => void db.updateSyncItem(id, { status: 'synced', progress: 100, synced_at: new Date().toISOString() }))
         }, 2000)
       },
-      markAllNotificationsRead: () => set((s) => ({ notifications: s.notifications.map((n) => ({ ...n, read: true })) })),
+      markAllNotificationsRead: () => {
+        set((s) => ({ notifications: s.notifications.map((n) => ({ ...n, read: true })) }))
+        void db.markNotificationsRead()
+      },
       tickCountdown: () => set((s) => ({ hazardCountdown: Math.max(0, s.hazardCountdown - 1) })),
-      addRegistration: (r) => set((s) => ({ registrations: [{ id: `reg-${Date.now()}`, ...r, time: new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) }, ...s.registrations] })),
-      addCommunityShelter: (sh) => set((s) => ({ communityShelters: [sh, ...s.communityShelters] })),
-      reserveCommunitySpace: (id, people) => set((s) => ({
-        communityShelters: s.communityShelters.map((x) => (x.id === id ? { ...x, free: Math.max(0, x.free - people) } : x)),
-      })),
-      setAlertLevel: (lv) => set({ alertLevel: lv }),
-      setHazardCountdown: (sec) => set({ hazardCountdown: sec }),
-      seedCases: (cs) => set((s) => ({ cases: [...cs.filter((c) => !s.cases.some((x) => x.id === c.id)), ...s.cases] })),
-      resetDemo: () => set({
-        cases: INITIAL_CASES, assignments: INITIAL_ASSIGNMENTS, syncItems: INITIAL_SYNC, auditLog: INITIAL_AUDIT,
-        timeline: [], registrations: [], communityShelters: INITIAL_COMMUNITY_SHELTERS, alertLevel: 'warning', hazardCountdown: 13330,
-        notifications: [
-          { id: 'n1', text: 'Tier 1 alert: Fatima Bibi – no response 2h 45m', read: false },
-          { id: 'n2', text: 'Water level +2.1m at Lyari Nadi sensor LK-91', read: false },
-          { id: 'n3', text: 'Boat Unit 04 dispatched to Sector 4-B', read: false },
-        ],
-      }),
+      addRegistration: (r) => {
+        const row = { id: `reg-${Date.now()}`, ...r, time: new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' }) }
+        set((s) => ({ registrations: [row, ...s.registrations] }))
+        void db.insertRegistration({ ...r, registrarId: get().authUserId || undefined })
+      },
+      addCommunityShelter: (sh) => {
+        set((s) => ({ communityShelters: [sh, ...s.communityShelters] }))
+        void db.insertShelter(sh, get().authUserId || undefined)
+      },
+      reserveCommunitySpace: (id, people) => {
+        const cur = get().communityShelters.find((x) => x.id === id)
+        set((s) => ({
+          communityShelters: s.communityShelters.map((x) => (x.id === id ? { ...x, free: Math.max(0, x.free - people) } : x)),
+        }))
+        void db.reserveShelter(id, people, cur?.free ?? people)
+      },
+      setAlertLevel: (lv) => {
+        set({ alertLevel: lv })
+        void db.setConfig('alert_level', lv)
+      },
+      setHazardCountdown: (sec) => {
+        set({ hazardCountdown: sec })
+        void db.setConfig('hazard_countdown_seconds', sec)
+      },
+      seedCases: (cs) => {
+        set((s) => ({ cases: [...cs.filter((c) => !s.cases.some((x) => x.id === c.id)), ...s.cases] }))
+        cs.forEach((c) => void db.insertCase(c))
+      },
+      resetDemo: () => {
+        void db.fetchSnapshot().then((snap) => {
+          if (snap) get().applySnapshot(snap)
+        })
+      },
+      setAuthUserId: (id) => set({ authUserId: id }),
+      applySnapshot: (snap) => {
+        const sim = snap.sim as Partial<SimState> | null
+        set({
+          cases: snap.cases,
+          assignments: snap.assignments,
+          syncItems: snap.syncItems,
+          auditLog: snap.auditLog,
+          timeline: snap.timeline,
+          notifications: snap.notifications,
+          intakeQueue: snap.intakeQueue,
+          registrations: snap.registrations,
+          communityShelters: snap.communityShelters.length ? snap.communityShelters : get().communityShelters,
+          officialShelter: snap.officialShelter,
+          buddyHouseholds: snap.buddyHouseholds,
+          fieldTasks: snap.fieldTasks,
+          alertLevel: snap.alertLevel,
+          hazardCountdown: snap.hazardCountdown,
+          sim: sim ? { ...get().sim, ...sim } : get().sim,
+          resident: snap.resident || get().resident,
+          dbReady: true,
+        })
+      },
     }),
     {
       name: 'nlb-app-state',
       partialize: (s) => ({
-        user: s.user, language: s.language, theme: s.theme, isOnline: s.isOnline,
-        alertLevel: s.alertLevel, cases: s.cases, auditLog: s.auditLog,
-        syncItems: s.syncItems, notifications: s.notifications, hazardCountdown: s.hazardCountdown,
-        assignments: s.assignments, registrations: s.registrations, resident: s.resident, communityShelters: s.communityShelters,
+        language: s.language, theme: s.theme, isOnline: s.isOnline,
       }),
     }
   )

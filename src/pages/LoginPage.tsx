@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore, type Role } from '../store'
 import { t } from '../i18n'
+import { signIn } from '../lib/db'
+import { hydrateFromSupabase } from '../lib/session'
+import { supabaseConfigured } from '../lib/supabase'
 
 interface RoleCard {
   name: string
@@ -37,34 +40,55 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const { login, language, setLanguage, showToast } = useStore()
   const [email, setEmail] = useState('zara.khan@emergency.sindh.gov.pk')
-  const [password, setPassword] = useState('••••••••••••••••')
+  const [password, setPassword] = useState('')
   const [showPwd, setShowPwd] = useState(false)
   const [authenticating, setAuthenticating] = useState(false)
   const [authUser, setAuthUser] = useState<string | null>(null)
 
-  const doLogin = (role: Role, name: string, nameUrdu: string, emailAddr: string, roleLabel: string) => {
+  const finishLocal = (role: Role, name: string, nameUrdu: string, emailAddr: string, roleLabel: string) => {
+    login({ name, nameUrdu, email: emailAddr, phone: emailAddr, role, roleLabel })
+    showToast(t('accessGranted', 'en'), t('accessGranted', 'ur'), 'success')
+    setAuthenticating(false)
+    setAuthUser(null)
+    navigate(ROLE_HOMES[role])
+  }
+
+  const doLogin = async (role: Role, name: string, nameUrdu: string, emailAddr: string, roleLabel: string, pwd: string) => {
     setAuthenticating(true)
     setAuthUser(name)
-    setTimeout(() => {
-      login({ name, nameUrdu, email: emailAddr, phone: emailAddr, role, roleLabel })
-      showToast(t('accessGranted', 'en'), t('accessGranted', 'ur'), 'success')
-      setAuthenticating(false)
-      setAuthUser(null)
-      navigate(ROLE_HOMES[role])
-    }, 800)
+    if (supabaseConfigured && pwd.trim()) {
+      const { error } = await signIn(emailAddr, pwd.trim())
+      if (!error) {
+        await hydrateFromSupabase()
+        const live = useStore.getState().user
+        showToast(t('accessGranted', 'en'), t('accessGranted', 'ur'), 'success')
+        setAuthenticating(false)
+        setAuthUser(null)
+        navigate(ROLE_HOMES[live?.role || role])
+        return
+      }
+      if (import.meta.env.VITE_ENABLE_DEMO_LOGINS !== 'true') {
+        showToast(error.message, 'لاگ ان ناکام', 'error')
+        setAuthenticating(false)
+        setAuthUser(null)
+        return
+      }
+      showToast('Auth failed — demo session. Use the Dashboard password for live RLS.', 'ڈیمو سیشن', 'warning')
+    }
+    finishLocal(role, name, nameUrdu, emailAddr, roleLabel)
+    void hydrateFromSupabase()
   }
 
   const handleFormLogin = (e: React.FormEvent) => {
     e.preventDefault()
     const card = ROLE_CARDS.find((c) => c.email === email) || ROLE_CARDS[0]
-    doLogin(card.role, card.name, card.nameUrdu, card.email, card.roleLabel)
+    void doLogin(card.role, card.name, card.nameUrdu, card.email, card.roleLabel, password)
   }
 
   const selectRole = (card: RoleCard) => {
     setEmail(card.email)
-    setPassword('token_' + Math.random().toString(36).substring(2, 10))
-    showToast(`${card.roleLabel} credentials loaded for ${card.name}`, `${card.roleLabel} - ${card.name}`, 'info')
-    doLogin(card.role, card.name, card.nameUrdu, card.email, card.roleLabel)
+    showToast(`${card.roleLabel} loaded for ${card.name}`, `${card.roleLabel} - ${card.name}`, 'info')
+    void doLogin(card.role, card.name, card.nameUrdu, card.email, card.roleLabel, password)
   }
 
   return (
@@ -149,7 +173,7 @@ export default function LoginPage() {
                   <button className={`font-telemetry-sm text-telemetry-sm text-primary hover:underline ${language === 'ur' ? 'font-urdu-body text-xs' : ''}`} type="button" onClick={() => showToast(t('contactAdmin', 'en'), t('contactAdmin', 'ur'), 'info')}>{t('help', language)}</button>
                 </div>
                 <div className="relative">
-                  <input className="w-full bg-surface-container-lowest/80 text-on-surface rounded-lg p-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 font-telemetry-md text-telemetry-md placeholder-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary-container focus:bg-surface-container-low transition-all" id="authToken" required type={showPwd ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <input className="w-full bg-surface-container-lowest/80 text-on-surface rounded-lg p-3.5 pl-10 rtl:pl-3.5 rtl:pr-10 font-telemetry-md text-telemetry-md placeholder-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary-container focus:bg-surface-container-low transition-all" id="authToken" required type={showPwd ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password from Supabase Auth" />
                   <span className="material-symbols-outlined absolute left-3 rtl:left-auto rtl:right-3 top-3.5 text-on-surface-variant/60 pointer-events-none">shield_lock</span>
                   <button className="absolute right-3 rtl:right-auto rtl:left-3 top-3.5 text-on-surface-variant hover:text-on-surface transition-colors" onClick={() => setShowPwd(!showPwd)} type="button">
                     <span className="material-symbols-outlined text-[20px]">{showPwd ? 'visibility_off' : 'visibility'}</span>

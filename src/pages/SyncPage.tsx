@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { usePageInteractions } from '../lib/interactions'
+import LiveBoard from '../components/LiveBoard'
 
 export default function SyncPage() {
   const nav = useNavigate()
@@ -7,6 +8,7 @@ export default function SyncPage() {
   return (
     <div className={"bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen"} {...bind}>
       <div className={"flex flex-col relative w-full bg-surface"}><div className={"flex flex-col w-full"}>
+      <div className={"px-margin pt-space-sm"}><LiveBoard variant="sync" /></div>
       {/*  Glowing Amber Offline Hero Banner  */}
       <div className={"px-margin pt-space-sm pb-space-xs"}>
       <div className={"relative overflow-hidden rounded-xl bg-surface-container-high p-space-md shadow-[0_0_28px_rgba(242,169,59,0.22)]"}>

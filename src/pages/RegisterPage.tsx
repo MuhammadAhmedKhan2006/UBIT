@@ -1,12 +1,23 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { usePageInteractions } from '../lib/interactions'
+import LiveBoard from '../components/LiveBoard'
+import { useStore } from '../store'
 
 export default function RegisterPage() {
   const nav = useNavigate()
   const bind = usePageInteractions("RegisterPage", nav)
+  const addRegistration = useStore((s) => s.addRegistration)
+  const showToast = useStore((s) => s.showToast)
+  const submitReg = () => {
+    const name = (document.getElementById('fullName') as HTMLInputElement | null)?.value.trim() || 'Unnamed resident'
+    const age = 0
+    addRegistration({ name, age, area: 'Lyari Sector 4-B' })
+    showToast('Registration saved', 'اندراج محفوظ ہو گیا', 'success')
+  }
   return (
     <div className={"bg-surface text-on-surface font-body-md text-body-md antialiased selection:bg-primary-container selection:text-on-primary-container flex flex-col min-h-screen"} {...bind}>
       <div className={"flex flex-col relative w-full px-margin pt-28 pb-28 bg-surface"}><div className={"flex flex-col w-full space-y-space-md text-on-surface"}>
+      <LiveBoard variant="register" />
       {/*  Success Offline Sync Toast  */}
       <div className={"relative overflow-hidden rounded-xl bg-secondary-container/20 p-space-md shadow-lg flex items-center justify-between gap-space-sm backdrop-blur-md"}>
       <div className={"flex items-center gap-space-sm min-w-0"}>
@@ -282,7 +293,7 @@ export default function RegisterPage() {
       </div>
       {/*  Large 3D Embossed Amber Submit Button  */}
       <div className={"pt-2"}>
-      <button className={"w-full h-14 rounded-2xl bg-primary-container text-on-primary-container font-headline-md text-headline-md flex flex-col items-center justify-center shadow-[0_6px_20px_rgba(242,169,59,0.4),inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-2px_0_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[0_2px_10px_rgba(242,169,59,0.3)] transition-all"} type={"button"}>
+      <button onClick={submitReg} className={"w-full h-14 rounded-2xl bg-primary-container text-on-primary-container font-headline-md text-headline-md flex flex-col items-center justify-center shadow-[0_6px_20px_rgba(242,169,59,0.4),inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-2px_0_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[0_2px_10px_rgba(242,169,59,0.3)] transition-all"} type={"button"}>
       <div className={"flex items-center gap-2"}>
       <span className={"material-symbols-outlined text-[24px]"}>verified</span>
       <span className={"tracking-tight font-extrabold"}>Submit Registration</span>

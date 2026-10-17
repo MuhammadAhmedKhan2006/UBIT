@@ -1,0 +1,16 @@
+-- Nobody Left Behind (UBIT) — Supabase schema runbook
+-- Do NOT paste this file into the SQL editor. Run the numbered files in order:
+--
+--   1. database/sql/01_extensions_types.sql
+--   2. database/sql/02_tables.sql
+--   3. database/sql/03_functions_triggers.sql
+--   4. database/sql/04_rls.sql
+--   5. database/sql/05_views_realtime_grants.sql
+--   6. database/sql/06_seed.sql
+--
+-- Enable PostGIS first: Dashboard → Database → Extensions → postgis
+-- (01 also runs CREATE EXTENSION IF NOT EXISTS postgis.)
+--
+-- If a previous run created the enums, 01 is safe to re-run (duplicate types are ignored).
+-- After 06, create Auth users in Dashboard (emails listed at the end of 06).
+-- handle_new_user() fills public.profiles from those emails.

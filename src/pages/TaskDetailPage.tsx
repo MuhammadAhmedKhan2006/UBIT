@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { usePageInteractions } from '../lib/interactions'
+import LiveBoard from '../components/LiveBoard'
 
 export default function TaskDetailPage() {
   const nav = useNavigate()
@@ -7,6 +8,7 @@ export default function TaskDetailPage() {
   return (
     <div className={"bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen"} {...bind}>
       <div className={"flex flex-col relative w-full bg-surface"}><div className={"flex flex-col w-full px-margin pb-space-xl gap-space-md"}>
+      <LiveBoard variant="field" />
       {/*  1. Header Card (Triage & Identity)  */}
       <div className={"relative overflow-hidden rounded-xl bg-surface-container-high/90 backdrop-blur-xl p-space-md shadow-xl"}>
       {/*  Top Telemetry Row & TIER 1 Badge  */}

@@ -1,11 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { usePageInteractions } from '../lib/interactions'
+import LiveBoard from '../components/LiveBoard'
 
 export default function DispatchPage() {
   const nav = useNavigate()
   const bind = usePageInteractions("DispatchPage", nav)
   return (
     <div className={"bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"} {...bind}>
+      <LiveBoard variant="dispatch" />
 {/*  TOP CONSOLE CONTROLS & KPI TELEMETRY  */}
       <section className={"flex flex-col gap-space-md"}>
       {/*  Header Block  */}

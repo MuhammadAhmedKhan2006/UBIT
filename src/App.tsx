@@ -26,6 +26,7 @@ import CaseDrawer from './components/CaseDrawer'
 import Sidebar from './components/Sidebar'
 import BottomTabBar from './components/BottomTabBar'
 import TopBar from './components/TopBar'
+import DataSync from './components/DataSync'
 
 const ROLE_HOMES: Record<Role, string> = {
   coordinator: '/command',
@@ -91,6 +92,7 @@ function Boot() {
 export default function App() {
   return (
     <BrowserRouter>
+      <DataSync />
       <Boot />
       <Shell />
       <CaseDrawer />
