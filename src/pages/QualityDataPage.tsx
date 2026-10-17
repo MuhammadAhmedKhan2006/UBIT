@@ -9,7 +9,7 @@ export default function QualityDataPage() {
 {/*  Sub-Navigation Bar & Action Controls  */}
       <div className={"flex flex-col xl:flex-row xl:items-center justify-between gap-space-md bg-surface-container-low/90 backdrop-blur-xl p-space-sm rounded-xl shadow-xl"}>
       {/*  Sub Tabs  */}
-      <div className={"flex items-center gap-space-xs p-1 bg-surface-container-lowest/80 rounded-lg"}>
+      <div className={"flex items-center gap-space-xs p-1 bg-surface-container-lowest/80 rounded-lg max-w-full overflow-x-auto"}>
       <button className={"flex items-center gap-space-xs px-space-md py-space-xs rounded-md bg-primary-container text-on-primary-container font-headline-sm text-body-sm font-bold shadow-[0_0_16px_rgba(242,169,59,0.35)] transition-all"}>
       <span className={"material-symbols-outlined text-telemetry-md"}>dataset</span>
       <span>Data Quality</span>

@@ -135,8 +135,11 @@ export default function TopBar() {
           <span className="material-symbols-outlined text-telemetry-md">bolt</span>
           <span className={`tracking-wide ${language === 'ur' ? 'font-urdu-body' : ''}`}>{t('syntheticDataFull', language)}</span>
         </div>
-        <div className="h-16 w-full px-space-lg flex items-center justify-between gap-space-md">
-          <div className="flex items-center gap-space-md">
+        <div className="h-16 w-full px-margin lg:px-space-lg flex items-center justify-between gap-space-sm lg:gap-space-md">
+          <div className="flex items-center gap-space-sm lg:gap-space-md min-w-0">
+            <button onClick={() => useStore.getState().setNavOpen(true)} aria-label="Menu" className="lg:hidden w-10 h-10 shrink-0 rounded-lg bg-surface-container flex items-center justify-center text-on-surface" type="button">
+              <span className="material-symbols-outlined">menu</span>
+            </button>
             <div className="flex items-center gap-space-sm">
               <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-b from-surface-container-high to-surface-container-lowest shadow-[0_0_35px_rgba(242,169,59,0.35)]">
                 <svg className="w-5 h-5 text-primary-container" fill="none" viewBox="0 0 100 100">
@@ -145,7 +148,7 @@ export default function TopBar() {
                   <circle cx="50" cy="56" fill="#FFF3D4" r="3.5" />
                 </svg>
               </div>
-              <div className="flex flex-col leading-none">
+              <div className="hidden md:flex flex-col leading-none">
                 <span className={`font-headline-sm text-headline-sm text-primary font-bold tracking-tight ${language === 'ur' ? 'font-urdu-headline' : ''}`}>{t('appName', language)}</span>
               </div>
             </div>
@@ -160,10 +163,10 @@ export default function TopBar() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-error" />
               </span>
-              <span className={`font-telemetry-sm text-telemetry-sm font-semibold tracking-wide ${language === 'ur' ? 'font-urdu-body' : ''}`}>⚠️ {t('waterArrives', language)} {fmtCountdown(hazardCountdown)}</span>
+              <span className={`font-telemetry-sm text-telemetry-sm font-semibold tracking-wide whitespace-nowrap ${language === 'ur' ? 'font-urdu-body' : ''}`}><span className="hidden lg:inline">⚠️ {t('waterArrives', language)} </span>{fmtCountdown(hazardCountdown)}</span>
             </div>
           </div>
-          <div className="flex items-center gap-space-sm">
+          <div className="flex items-center gap-space-xs sm:gap-space-sm shrink-0">
             <div className="flex items-center bg-surface-container rounded-lg p-0.5 text-on-surface-variant">
               <button onClick={() => setLanguage('en')} className={`px-space-xs py-0.5 rounded font-telemetry-sm text-telemetry-sm transition-colors ${language === 'en' ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:text-on-surface'}`}>EN</button>
               <button onClick={() => setLanguage('ur')} className={`px-space-xs py-0.5 rounded font-urdu-body text-telemetry-sm transition-colors ${language === 'ur' ? 'bg-primary-container text-on-primary-container font-semibold' : 'text-on-surface-variant hover:text-on-surface'}`}>اردو</button>
@@ -173,7 +176,7 @@ export default function TopBar() {
             </button>
             <button onClick={() => useStore.getState().toggleOnline()} className={`flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant font-telemetry-sm text-telemetry-sm transition-colors hover:bg-surface-container-high ${language === 'ur' ? 'font-urdu-body' : ''}`} type="button">
               <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-secondary' : 'bg-error animate-pulse'}`} />
-              <span>{t(isOnline ? 'online' : 'offline', language)}</span>
+              <span className="hidden sm:inline">{t(isOnline ? 'online' : 'offline', language)}</span>
             </button>
             <div className="relative" ref={notifRef}>
               <button onClick={() => setShowNotifs(!showNotifs)} className="relative w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" type="button">
@@ -181,7 +184,7 @@ export default function TopBar() {
                 {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-error text-on-error font-telemetry-sm text-telemetry-sm font-bold flex items-center justify-center">{unreadCount}</span>}
               </button>
               {showNotifs && (
-                <div className="absolute right-0 top-full mt-1 w-80 bg-surface-container-low rounded-lg shadow-xl z-50 overflow-hidden">
+                <div className="absolute right-0 top-full mt-1 w-80 max-w-[calc(100vw-1.5rem)] bg-surface-container-low rounded-lg shadow-xl z-50 overflow-hidden">
                   <div className="flex items-center justify-between p-space-sm border-b border-surface-variant/30">
                     <span className={`font-headline-sm text-body-sm font-bold text-on-surface ${language === 'ur' ? 'font-urdu-headline' : ''}`}>{t('notifications', language)}</span>
                     <button onClick={() => { markAllNotificationsRead(); showToast('All notifications marked read', 'تمام اطلاعات پڑھ گئے', 'success') }} className="font-telemetry-sm text-telemetry-sm text-primary hover:underline" type="button">Mark all read</button>

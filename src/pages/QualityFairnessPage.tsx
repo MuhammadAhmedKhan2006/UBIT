@@ -8,7 +8,7 @@ export default function QualityFairnessPage() {
     <div className={"bg-background font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen"} {...bind}>
 {/*  Top Utility Contextual Breadcrumb & Live Mesh Status  */}
       <div className={"flex flex-wrap items-center justify-between gap-space-md mb-space-md"}>
-      <div className={"flex items-center gap-space-sm text-on-surface-variant font-telemetry-sm text-telemetry-sm"}>
+      <div className={"flex flex-wrap items-center gap-space-sm text-on-surface-variant font-telemetry-sm text-telemetry-sm"}>
       <span className={"text-secondary flex items-center gap-1 font-semibold"}>
       <span className={"material-symbols-outlined text-telemetry-md"}>verified_user</span>
       <span>AUDIT &amp; QUALITY</span>

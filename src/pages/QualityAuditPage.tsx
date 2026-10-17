@@ -10,7 +10,7 @@ export default function QualityAuditPage() {
 
       {/*  Sub-Navigation Bar  */}
       <section className={"flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-md pb-space-lg"}>
-      <div className={"flex items-center gap-space-xs p-1 bg-surface-container-lowest rounded-xl shadow-md"}>
+      <div className={"flex items-center gap-space-xs p-1 bg-surface-container-lowest rounded-xl shadow-md max-w-full overflow-x-auto"}>
       <button className={"audit-tab-trigger px-space-md py-space-sm font-headline-sm text-body-md rounded-lg text-on-surface-variant hover:text-on-surface transition-all flex items-center gap-space-sm"} data-action="switchAuditTab" data-args={"[\"__this__\",\"data-quality\"]"}>
       <span className={"material-symbols-outlined text-headline-sm"}>dataset</span>
       <span>Data Quality</span>

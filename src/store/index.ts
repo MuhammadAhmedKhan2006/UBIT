@@ -155,6 +155,8 @@ interface AppState {
   markAllNotificationsRead: () => void
   tickCountdown: () => void
   addRegistration: (r: { name: string; age: number; area: string }) => void
+  navOpen: boolean
+  setNavOpen: (open: boolean) => void
   addCommunityShelter: (s: CommunityShelter) => void
   reserveCommunitySpace: (id: string, people: number) => void
   setAlertLevel: (lv: AppState['alertLevel']) => void
@@ -228,6 +230,8 @@ export const useStore = create<AppState>()(
       playback: { playing: false, progress: 0 },
       registrations: [],
       communityShelters: INITIAL_COMMUNITY_SHELTERS,
+      navOpen: false,
+      setNavOpen: (open) => set({ navOpen: open }),
       resident: { name: 'Rashid Ali', phone: '+92 300 8492011', phoneType: 'basic', language: 'ur', flags: ['Elderly household'] },
 
       login: (user) => set({ user: { ...user, phone: user.phone || user.email } }),

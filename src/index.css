@@ -151,6 +151,28 @@ main :is(h1, h2, h3, h4).truncate { white-space: normal; overflow: visible; text
 main :is(h1, h2, h3, h4) { text-wrap: balance; }
 main p, main li { text-wrap: pretty; }
 main .lang-hide { display: none !important; }
+
+/* ---------------------------------------------------------------
+   Responsive safety net
+   --------------------------------------------------------------- */
+html, body, #root { max-width: 100%; }
+body { overflow-x: hidden; }
+main { overflow-wrap: break-word; overflow-x: clip; }
+main .overflow-x-auto > * { flex-shrink: 0; }
+/* flex / grid children may shrink instead of forcing the page wider */
+main .flex > *, main .grid > *, main .inline-flex > * { min-width: 0; }
+main img, main video, main canvas { max-width: 100%; }
+/* mobile shells already pad <main>; exported screens pad again, so drop the second one */
+.mobile-shell .px-margin { padding-inline: 0; }
+
+@media (max-width: 767px) {
+  /* wide data tables scroll sideways inside their card instead of stretching the page */
+  main table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* long toolbars / tab strips scroll instead of overflowing */
+  main .tab-scroll, main nav.flex { overflow-x: auto; flex-wrap: nowrap; }
+  /* large exported headlines */
+  main h1 { overflow-wrap: anywhere; }
+}
 /* scroll lists must scroll, not squash their cards */
 main .overflow-y-auto > *, main .overflow-auto > * { flex-shrink: 0; }
 

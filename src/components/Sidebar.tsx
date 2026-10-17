@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useStore, type Role } from '../store'
 import { t } from '../i18n'
@@ -34,11 +35,16 @@ export default function Sidebar() {
   const user = useStore((s) => s.user)
   const language = useStore((s) => s.language)
   const loc = useLocation()
+  const navOpen = useStore((s) => s.navOpen)
+  const setNavOpen = useStore((s) => s.setNavOpen)
+  useEffect(() => { setNavOpen(false) }, [loc.pathname, setNavOpen])
   if (!user) return null
   const items = ROLE_NAV[user.role] || []
 
   return (
-    <aside className="hidden lg:flex fixed left-0 rtl:left-auto rtl:right-0 top-0 h-full w-64 bg-surface-container-low/95 backdrop-blur-2xl z-50 flex-col justify-between py-space-md shadow-[0_1px_8px_rgba(0,0,0,0.4)]">
+    <>
+    {navOpen && <div className="lg:hidden fixed inset-0 z-[55] bg-black/60" onClick={() => setNavOpen(false)} />}
+    <aside className={`flex fixed left-0 rtl:left-auto rtl:right-0 top-0 h-full w-64 max-w-[80vw] bg-surface-container-low backdrop-blur-2xl z-[60] lg:z-50 flex-col justify-between py-space-md shadow-[0_1px_8px_rgba(0,0,0,0.4)] overflow-y-auto transition-transform duration-200 lg:translate-x-0 ${navOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'}`}>
       <div className="flex flex-col gap-space-md">
         <div className="px-space-md flex items-center gap-space-sm">
           <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_12px_rgba(242,169,59,0.7)]" />
@@ -77,5 +83,6 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   )
 }

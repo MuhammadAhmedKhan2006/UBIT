@@ -110,9 +110,9 @@ function Shell() {
     <>
       <div className="flex min-h-screen bg-background text-on-surface font-body-md">
         {user && !isMobile && <Sidebar />}
-        <div className={`flex-1 flex flex-col min-h-screen ${user && !isMobile ? 'lg:pl-64 lg:rtl:pl-0 lg:rtl:pr-64' : ''}`}>
+        <div className={`flex-1 min-w-0 flex flex-col min-h-screen ${user && !isMobile ? 'lg:pl-64 lg:rtl:pl-0 lg:rtl:pr-64' : ''}`}>
           {user && <TopBar />}
-          <main className={`flex-1 w-full mx-auto ${!user ? 'max-w-none !p-0' : isMobile ? 'pt-32 pb-28 max-w-[560px]' : 'pt-28 pb-16 max-w-[1520px]'} px-margin lg:px-space-lg`}>
+          <main className={`flex-1 w-full min-w-0 mx-auto ${isMobile ? 'mobile-shell' : ''} ${!user ? 'max-w-none !p-0' : isMobile ? 'pt-32 pb-28 max-w-[560px]' : 'pt-28 pb-16 max-w-[1520px]'} px-margin lg:px-space-lg`}>
             <Guard>
               <Routes>
                 <Route path="/" element={<LandingPage />} />
